@@ -1,0 +1,239 @@
+/*
+ * Traffic Simulator
+ *
+ * Copyright (C) 2018, Ajuntament de Sant Feliu de Llobregat
+ *
+ * This program is licensed and may be used, modified and redistributed under
+ * the terms of the European Public License (EUPL), either version 1.1 or (at
+ * your option) any later version as soon as they are approved by the European
+ * Commission.
+ *
+ * Alternatively, you may redistribute and/or modify this program under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either  version 3 of the License, or (at your option)
+ * any later version.
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the licenses for the specific language governing permissions, limitations
+ * and more details.
+ *
+ * You should have received a copy of the EUPL1.1 and the LGPLv3 licenses along
+ * with this program; if not, you may find them at:
+ *
+ *   https://joinup.ec.europa.eu/software/page/eupl/licence-eupl
+ *   http://www.gnu.org/licenses/
+ *   and
+ *   https://www.gnu.org/licenses/lgpl.txt
+ */
+package org.santfeliu.trafsim;
+
+import java.io.BufferedReader;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.StringTokenizer;
+import org.santfeliu.trafsim.Group.Journey;
+
+/**
+ *
+ * @author realor
+ */
+public class GroupsDialog extends javax.swing.JDialog
+{
+  private boolean accepted;
+
+  /**
+   * Creates new form GroupSetupDialog
+   */
+  public GroupsDialog(java.awt.Frame parent, boolean modal)
+  {
+    super(parent, modal);
+    initComponents();
+  }
+
+  public boolean showDialog()
+  {
+    setSize(400, 500);
+    setLocationRelativeTo(getParent());
+    setVisible(true);
+    return accepted;
+  }
+
+  public void setGroups(Map<String, Group> groups)
+  {
+    StringBuilder buffer = new StringBuilder();
+    ArrayList<Group> groupList = new ArrayList<Group>();
+    groupList.addAll(groups.values());
+    Collections.sort(groupList, new Comparator()
+    {
+      @Override
+      public int compare(Object o1, Object o2)
+      {
+        Group g1 = (Group)o1;
+        Group g2 = (Group)o2;
+        return g1.getName().compareTo(g2.getName());
+      }
+    });
+    for (Group group : groupList)
+    {
+      if (!group.getJourneys().isEmpty())
+      {
+        buffer.append("group ");
+        buffer.append(group.getName());
+        buffer.append("\n");
+        ArrayList<Journey> journeys = new ArrayList<Journey>();
+        journeys.addAll(group.getJourneys());
+        Collections.sort(journeys, new Comparator()
+        {
+          @Override
+          public int compare(Object o1, Object o2)
+          {
+            Journey j1 = (Journey)o1;
+            Journey j2 = (Journey)o2;
+            return j1.getLocationName().compareTo(j2.getLocationName());
+          }
+        });
+        for (Journey journey : journeys)
+        {
+          buffer.append("location\t");
+          buffer.append(journey.getLocationName());
+          buffer.append("\t");
+          buffer.append(journey.getFactor());
+          buffer.append("\n");
+        }
+        buffer.append("\n");
+      }
+    }
+    textArea.setText(buffer.toString());
+    textArea.setCaretPosition(0);
+  }
+
+  public Map<String, Group> getGroups()
+  {
+    HashMap<String, Group> groups = new HashMap<String, Group>();
+    String text = textArea.getText();
+    BufferedReader reader = new BufferedReader(new StringReader(text));
+    try
+    {
+      Group group = new Group("default");
+      groups.put("default", group);
+      String line = reader.readLine();
+      while (line != null)
+      {
+        StringTokenizer tokenizer = new StringTokenizer(line, " \t;");
+        int numTokens = tokenizer.countTokens();
+        if (numTokens > 0)
+        {
+          String cmd = tokenizer.nextToken();
+          if (cmd.equals("group") && numTokens > 1)
+          {
+            String groupName = tokenizer.nextToken();
+            group = groups.get(groupName);
+            if (group == null)
+            {
+              group = new Group(groupName);
+              groups.put(groupName, group);
+            }
+          }
+          else if (cmd.equals("location") && numTokens > 2)
+          {
+            String locationName = tokenizer.nextToken();
+            double factor = Double.parseDouble(tokenizer.nextToken());
+            group.addJourney(locationName, factor);
+          }
+        }
+        line = reader.readLine();
+      }
+    }
+    catch (Exception ex)
+    {
+      // ignore
+    }
+    return groups;
+  }
+
+  /**
+   * This method is called from within the constructor to initialize the form.
+   * WARNING: Do NOT modify this code. The content of this method is always
+   * regenerated by the Form Editor.
+   */
+  @SuppressWarnings("unchecked")
+  // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+  private void initComponents()
+  {
+
+    centerPanel = new javax.swing.JPanel();
+    scrollPane = new javax.swing.JScrollPane();
+    textArea = new javax.swing.JTextArea();
+    southPanel = new javax.swing.JPanel();
+    okButton = new javax.swing.JButton();
+    cancelButton = new javax.swing.JButton();
+
+    setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+    java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("org/santfeliu/trafsim/resources/TrafficSimulator"); // NOI18N
+    setTitle(bundle.getString("dialog.groups.title")); // NOI18N
+
+    centerPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(4, 4, 4, 4));
+    centerPanel.setLayout(new java.awt.BorderLayout());
+
+    textArea.setColumns(20);
+    textArea.setFont(new java.awt.Font("Monospaced", 0, 12)); // NOI18N
+    textArea.setRows(5);
+    textArea.setTabSize(20);
+    scrollPane.setViewportView(textArea);
+
+    centerPanel.add(scrollPane, java.awt.BorderLayout.CENTER);
+
+    getContentPane().add(centerPanel, java.awt.BorderLayout.CENTER);
+
+    okButton.setText(bundle.getString("dialog.ok")); // NOI18N
+    okButton.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        okButtonActionPerformed(evt);
+      }
+    });
+    southPanel.add(okButton);
+
+    cancelButton.setText(bundle.getString("dialog.cancel")); // NOI18N
+    cancelButton.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        cancelButtonActionPerformed(evt);
+      }
+    });
+    southPanel.add(cancelButton);
+
+    getContentPane().add(southPanel, java.awt.BorderLayout.SOUTH);
+
+    pack();
+  }// </editor-fold>//GEN-END:initComponents
+
+  private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_cancelButtonActionPerformed
+  {//GEN-HEADEREND:event_cancelButtonActionPerformed
+    dispose();
+  }//GEN-LAST:event_cancelButtonActionPerformed
+
+  private void okButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_okButtonActionPerformed
+  {//GEN-HEADEREND:event_okButtonActionPerformed
+    accepted = true;
+    dispose();
+  }//GEN-LAST:event_okButtonActionPerformed
+
+  // Variables declaration - do not modify//GEN-BEGIN:variables
+  private javax.swing.JButton cancelButton;
+  private javax.swing.JPanel centerPanel;
+  private javax.swing.JButton okButton;
+  private javax.swing.JScrollPane scrollPane;
+  private javax.swing.JPanel southPanel;
+  private javax.swing.JTextArea textArea;
+  // End of variables declaration//GEN-END:variables
+}
