@@ -107,7 +107,7 @@ public class TrafficSimulator extends javax.swing.JFrame
 
   public final void setSimulation(Simulation simulation)
   {
-    if (simulation == null) 
+    if (simulation == null)
       throw new RuntimeException("Simulation can not be null");
     this.simulation = simulation;
   }
@@ -122,12 +122,12 @@ public class TrafficSimulator extends javax.swing.JFrame
     this.modified = modified;
     updateTitle();
   }
-  
+
   public MapViewer getMapViewer()
   {
     return mapViewer;
   }
-  
+
   public String getMessage(String message)
   {
     String localizedMessage;
@@ -139,15 +139,15 @@ public class TrafficSimulator extends javax.swing.JFrame
     {
       localizedMessage = message;
     }
-    return localizedMessage;  
+    return localizedMessage;
   }
-  
+
   public void showError(Component component, String title, Exception ex)
   {
-    JOptionPane.showMessageDialog(component, ex.toString(), 
+    JOptionPane.showMessageDialog(component, ex.toString(),
       title, JOptionPane.ERROR_MESSAGE);
   }
-  
+
   public void start(Tool command)
   {
     if (currentTool != null)
@@ -157,41 +157,44 @@ public class TrafficSimulator extends javax.swing.JFrame
     currentTool = command;
     currentTool.start();
   }
-  
+
     private void updateTitle()
   {
     if (lastFile == null)
     {
       setTitle(APP_NAME);
-    }  
+    }
     else
     {
       String filename = lastFile.getName();
       if (modified) filename += "*";
-      setTitle(filename + " - " + APP_NAME);  
+      setTitle(filename + " - " + APP_NAME);
     }
   }
-  
+
   private void exit()
   {
-    if (modified)
-    {
-      int result = JOptionPane.showConfirmDialog(this, 
-        resourceBundle.getString("dialog.exit.unsavedChanges"),
-        resourceBundle.getString("dialog.exit.title"),
-        JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-      if (result == JOptionPane.NO_OPTION) return;
-    }
+    if (modified && !confirmDiscardChanges("dialog.exit.title")) return;
+
     System.exit(0);
   }
-  
+
+  private boolean confirmDiscardChanges(String title)
+  {
+    int result = JOptionPane.showConfirmDialog(this,
+      resourceBundle.getString("dialog.unsavedChanges"),
+      resourceBundle.getString(title),
+      JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+    return result == JOptionPane.YES_OPTION;
+  }
+
   public void setIndicatorsVisible(boolean visible)
   {
     indicatorsCheckBoxMenuItem.setSelected(visible);
     mapViewer.setIndicatorsVisible(indicatorsCheckBoxMenuItem.isSelected());
   }
-  
-  
+
+
   /**
    * This method is called from within the constructor to initialize the form.
    * WARNING: Do NOT modify this code. The content of this method is always
@@ -601,21 +604,25 @@ public class TrafficSimulator extends javax.swing.JFrame
 
   private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_aboutMenuItemActionPerformed
   {//GEN-HEADEREND:event_aboutMenuItemActionPerformed
-    JOptionPane.showMessageDialog(this, 
-      APP_NAME + " " +  APP_VERSION + 
-      "\nDepartament de Sistemes d'Informació (informatica@santfeliu.cat)\n" + 
-      "Copyright (C) 2019, Ajuntament de Sant Feliu de Llobregat", 
-      resourceBundle.getString("dialog.about.title"), 
+    JOptionPane.showMessageDialog(this,
+      APP_NAME + " " +  APP_VERSION +
+      "\nDepartament de Sistemes d'Informació (informatica@santfeliu.cat)\n" +
+      "Copyright (C) 2019, Ajuntament de Sant Feliu de Llobregat",
+      resourceBundle.getString("dialog.about.title"),
       JOptionPane.INFORMATION_MESSAGE);
   }//GEN-LAST:event_aboutMenuItemActionPerformed
 
   private void openFileMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_openFileMenuItemActionPerformed
   {//GEN-HEADEREND:event_openFileMenuItemActionPerformed
+    if (modified && !confirmDiscardChanges("dialog.open.open")) return;
+
     try
     {
       JFileChooser fileChooser = new JFileChooser();
+      File homeDir = new File(System.getProperty("user.home"));
+      fileChooser.setCurrentDirectory(homeDir);
       fileChooser.setFileFilter(new SimulationFileFilter());
-      int result = fileChooser.showDialog(this, 
+      int result = fileChooser.showDialog(this,
         resourceBundle.getString("dialog.open.open"));
       if (result == JFileChooser.APPROVE_OPTION)
       {
@@ -636,8 +643,8 @@ public class TrafficSimulator extends javax.swing.JFrame
     catch (Exception ex)
     {
       setCursor(Cursor.getDefaultCursor());
-      showError(this, resourceBundle.getString("dialog.open.title"), ex);      
-    }   
+      showError(this, resourceBundle.getString("dialog.open.title"), ex);
+    }
   }//GEN-LAST:event_openFileMenuItemActionPerformed
 
   private void zoomAllMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_zoomAllMenuItemActionPerformed
@@ -667,7 +674,7 @@ public class TrafficSimulator extends javax.swing.JFrame
       {
         fileChooser.setSelectedFile(lastFile);
       }
-      int result = fileChooser.showDialog(this, 
+      int result = fileChooser.showDialog(this,
         resourceBundle.getString("dialog.save.save"));
       if (result != JFileChooser.APPROVE_OPTION) return;
 
@@ -678,9 +685,9 @@ public class TrafficSimulator extends javax.swing.JFrame
       }
       if (file.exists())
       {
-        result = JOptionPane.showConfirmDialog(this, 
-          resourceBundle.getString("dialog.save.overwrite"), 
-          resourceBundle.getString("dialog.save.title"), 
+        result = JOptionPane.showConfirmDialog(this,
+          resourceBundle.getString("dialog.save.overwrite"),
+          resourceBundle.getString("dialog.save.title"),
           JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
         if (result == JOptionPane.NO_OPTION) return;
       }
@@ -691,7 +698,7 @@ public class TrafficSimulator extends javax.swing.JFrame
       writer.write(simulation);
       setCursor(Cursor.getDefaultCursor());
       lastFile = file;
-      setModified(false);      
+      setModified(false);
     }
     catch (Exception ex)
     {
@@ -702,6 +709,8 @@ public class TrafficSimulator extends javax.swing.JFrame
 
   private void newMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_newMenuItemActionPerformed
   {//GEN-HEADEREND:event_newMenuItemActionPerformed
+    if (modified && !confirmDiscardChanges("dialog.new.title")) return;
+
     setSimulation(new Simulation());
     mapViewer.repaint();
     lastFile = null;
@@ -713,12 +722,12 @@ public class TrafficSimulator extends javax.swing.JFrame
   {//GEN-HEADEREND:event_importMenuItemActionPerformed
     ImportDialog dialog = new ImportDialog(this, true);
     dialog.setLocationRelativeTo(this);
-    dialog.setVisible(true);    
+    dialog.setVisible(true);
   }//GEN-LAST:event_importMenuItemActionPerformed
 
   private void saveMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_saveMenuItemActionPerformed
   {//GEN-HEADEREND:event_saveMenuItemActionPerformed
-    if (lastFile == null) 
+    if (lastFile == null)
     {
       saveAsMenuItemActionPerformed(evt);
     }
@@ -736,7 +745,7 @@ public class TrafficSimulator extends javax.swing.JFrame
       catch (IOException ex)
       {
         setCursor(Cursor.getDefaultCursor());
-        showError(this, resourceBundle.getString("dialog.save.title"), ex);        
+        showError(this, resourceBundle.getString("dialog.save.title"), ex);
       }
     }
   }//GEN-LAST:event_saveMenuItemActionPerformed
@@ -831,7 +840,7 @@ public class TrafficSimulator extends javax.swing.JFrame
       simulation.getGroups().clear();
       simulation.getGroups().putAll(dialog.getGroups());
       setModified(true);
-    }    
+    }
   }//GEN-LAST:event_groupsMenuItemActionPerformed
 
   private void routeVehiclesMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_routeVehiclesMenuItemActionPerformed
@@ -863,7 +872,7 @@ public class TrafficSimulator extends javax.swing.JFrame
   {//GEN-HEADEREND:event_exportMenuItemActionPerformed
     ExportDialog dialog = new ExportDialog(this, true);
     dialog.setLocationRelativeTo(this);
-    dialog.setVisible(true);      
+    dialog.setVisible(true);
   }//GEN-LAST:event_exportMenuItemActionPerformed
 
   private void simulationPropsMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_simulationPropsMenuItemActionPerformed
@@ -931,7 +940,7 @@ public class TrafficSimulator extends javax.swing.JFrame
       }
     });
   }
-  
+
   private void setFrameIcons()
   {
     try
@@ -942,7 +951,7 @@ public class TrafficSimulator extends javax.swing.JFrame
           "/org/santfeliu/trafsim/resources/icons/logo_64.png"));
         setMacOSIcon(icon);
       }
-      else      
+      else
       {
         ArrayList<Image> icons = new ArrayList<Image>();
         int logoSizes[] = new int[]{16, 32, 64};
@@ -961,7 +970,7 @@ public class TrafficSimulator extends javax.swing.JFrame
       // ignore
     }
   }
-  
+
   private void setMacOSIcon(ImageIcon icon)
   {
     try
@@ -977,7 +986,7 @@ public class TrafficSimulator extends javax.swing.JFrame
       // ignore
     }
   }
-  
+
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JMenuItem aboutMenuItem;
