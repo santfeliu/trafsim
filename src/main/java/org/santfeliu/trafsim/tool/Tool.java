@@ -48,6 +48,12 @@ public abstract class Tool
     this.trafficSimulator = trafficSimulator;
   }
 
+  public abstract String getName();
+
+  public abstract void start();
+
+  public abstract void stop();
+
   public MapViewer getMapViewer()
   {
     return trafficSimulator.getMapViewer();
@@ -62,8 +68,9 @@ public abstract class Tool
   {
     return trafficSimulator.getMapViewer().getProjector();
   }
-  
-  public abstract void start();
 
-  public abstract void stop();
+  public void info(String message)
+  {
+    trafficSimulator.info(message);
+  }
 }

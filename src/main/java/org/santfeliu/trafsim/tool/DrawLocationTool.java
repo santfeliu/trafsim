@@ -52,11 +52,18 @@ public class DrawLocationTool extends Tool implements MouseListener
   }
 
   @Override
+  public String getName()
+  {
+    return "drawLocation";
+  }
+
+  @Override
   public void start()
   {
     MapViewer mapViewer = getMapViewer();
     mapViewer.addMouseListener(this);
     mapViewer.setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+    info("drawLocationTool.info");
   }
 
   @Override

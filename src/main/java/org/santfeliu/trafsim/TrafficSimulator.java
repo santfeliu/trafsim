@@ -153,12 +153,20 @@ public class TrafficSimulator extends javax.swing.JFrame
     if (currentTool != null)
     {
       currentTool.stop();
+      toolInfoLabel.setText(null);
     }
     currentTool = command;
     currentTool.start();
+    String key = "menu." + currentTool.getName() + "Tool";
+    toolNameLabel.setText(getMessage(key) + ":");
   }
 
-    private void updateTitle()
+  public void info(String message)
+  {
+    toolInfoLabel.setText(getMessage(message));
+  }
+
+  private void updateTitle()
   {
     if (lastFile == null)
     {
@@ -206,6 +214,9 @@ public class TrafficSimulator extends javax.swing.JFrame
   {
 
     mapViewer = new org.santfeliu.trafsim.MapViewer();
+    statusPanel = new javax.swing.JPanel();
+    toolNameLabel = new javax.swing.JLabel();
+    toolInfoLabel = new javax.swing.JLabel();
     menuBar = new javax.swing.JMenuBar();
     fileMenu = new javax.swing.JMenu();
     newMenuItem = new javax.swing.JMenuItem();
@@ -259,7 +270,19 @@ public class TrafficSimulator extends javax.swing.JFrame
         TrafficSimulator.this.windowClosing(evt);
       }
     });
+
+    mapViewer.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
     getContentPane().add(mapViewer, java.awt.BorderLayout.CENTER);
+
+    statusPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(2, 2, 2, 2));
+    statusPanel.setLayout(new java.awt.BorderLayout());
+
+    toolNameLabel.setFont(toolNameLabel.getFont().deriveFont(java.awt.Font.BOLD));
+    toolNameLabel.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 4));
+    statusPanel.add(toolNameLabel, java.awt.BorderLayout.WEST);
+    statusPanel.add(toolInfoLabel, java.awt.BorderLayout.CENTER);
+
+    getContentPane().add(statusPanel, java.awt.BorderLayout.SOUTH);
 
     java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("org/santfeliu/trafsim/resources/TrafficSimulator"); // NOI18N
     fileMenu.setText(bundle.getString("menu.file")); // NOI18N
@@ -1023,6 +1046,9 @@ public class TrafficSimulator extends javax.swing.JFrame
   private javax.swing.JMenuItem saveMenuItem;
   private javax.swing.JMenuItem selectMenuItem;
   private javax.swing.JMenuItem simulationPropsMenuItem;
+  private javax.swing.JPanel statusPanel;
+  private javax.swing.JLabel toolInfoLabel;
+  private javax.swing.JLabel toolNameLabel;
   private javax.swing.JMenu toolsMenu;
   private javax.swing.JPopupMenu.Separator toolsSeparator1;
   private javax.swing.JPopupMenu.Separator toolsSeparator2;

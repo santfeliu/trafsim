@@ -82,12 +82,19 @@ public class SelectTool extends Tool
   }
 
   @Override
+  public String getName()
+  {
+    return "select";
+  }
+
+  @Override
   public void start()
   {
     MapViewer mapViewer = getMapViewer();
     mapViewer.addMouseListener(this);
     mapViewer.addMouseMotionListener(this);
     mapViewer.setPainter(this);
+    info("selectTool.info");
   }
 
   @Override

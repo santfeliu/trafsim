@@ -72,6 +72,12 @@ public class RouteVehiclesTool extends Tool implements Painter
   }
 
   @Override
+  public String getName()
+  {
+    return "routeVehicles";
+  }
+
+  @Override
   public void start()
   {
     trafficSimulator.setIndicatorsVisible(true);
@@ -79,6 +85,7 @@ public class RouteVehiclesTool extends Tool implements Painter
     mapViewer.setPainter(this);
     router = new Router();
     router.start();
+    info("routeVehiclesTool.routing");
   }
 
   @Override
@@ -212,6 +219,7 @@ public class RouteVehiclesTool extends Tool implements Painter
         indicators.update(vehicleGroup);
         indicators.updateAverages();
       }
+      info("routeVehiclesTool.completed");
       mapViewer.repaint();
     }
 

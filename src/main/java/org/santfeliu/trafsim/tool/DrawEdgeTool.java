@@ -66,6 +66,12 @@ public class DrawEdgeTool extends Tool
   }
 
   @Override
+  public String getName()
+  {
+    return "drawEdge";
+  }
+
+  @Override
   public void start()
   {
     vertices = new ArrayList<Point3d>();
@@ -76,6 +82,7 @@ public class DrawEdgeTool extends Tool
     mapViewer.addMouseMotionListener(this);
     mapViewer.setPainter(this);
     mapViewer.setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+    info("drawEdgeTool.info");
   }
 
   @Override

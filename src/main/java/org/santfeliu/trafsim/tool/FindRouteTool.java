@@ -68,12 +68,19 @@ public class FindRouteTool extends Tool implements MouseListener, Painter
   }
 
   @Override
+  public String getName()
+  {
+    return "findRoute";
+  }
+
+  @Override
   public void start()
   {
     routeFinder = new RouteFinder(getSimulation().getRoadGraph(), routeMeter);
     MapViewer mapViewer = getMapViewer();
     mapViewer.addMouseListener(this);
     mapViewer.setPainter(this);
+    info("findRouteTool.origin");
   }
 
   @Override
@@ -99,23 +106,28 @@ public class FindRouteTool extends Tool implements MouseListener, Painter
       Projector projector = mapViewer.getProjector();
       Point3d worldPoint = new Point3d();
       projector.unproject(e.getPoint(), worldPoint);
-      if (routeFinder.getOriginNode() == null)
+      if (!e.isShiftDown())
       {
-        routeFinder.setOrigin(worldPoint, Double.POSITIVE_INFINITY);
+        if (routeFinder.getOriginNode() == null)
+        {
+          routeFinder.setOrigin(worldPoint, Double.POSITIVE_INFINITY);
+        }
+        else
+        {
+          routeFinder.setDestination(worldPoint, Double.POSITIVE_INFINITY);
+          route = routeFinder.getRoute();
+          routeTime = routeMeter.getTime(route);
+        }
       }
       else
       {
-        routeFinder.setDestination(worldPoint, Double.POSITIVE_INFINITY);
+        routeFinder.setOrigin(worldPoint, Double.POSITIVE_INFINITY);
         route = routeFinder.getRoute();
         routeTime = routeMeter.getTime(route);
       }
+      mapViewer.repaint();
+      info("findRouteTool.destination");
     }
-    else
-    {
-      routeFinder.clear();
-      route = null;
-    }
-    mapViewer.repaint();
   }
 
   @Override

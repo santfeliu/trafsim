@@ -52,11 +52,18 @@ public class DrawVehicleGroupTool extends Tool implements MouseListener
   }
 
   @Override
+  public String getName()
+  {
+    return "drawVehicleGroup";
+  }
+
+  @Override
   public void start()
   {
     MapViewer mapViewer = getMapViewer();
     mapViewer.addMouseListener(this);
     mapViewer.setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+    info("drawVehicleGroupTool.info");
   }
 
   @Override
