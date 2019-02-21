@@ -89,46 +89,27 @@ public class DrawEdgeTool extends Tool
   }
 
   @Override
-  public void paint(MapViewer mapViewer, Graphics2D g)
+  public void mouseClicked(MouseEvent e)
   {
-    g.setColor(Color.MAGENTA);
-    Projector projector = mapViewer.getProjector();
-    java.awt.Point dp1 = new java.awt.Point();
-    java.awt.Point dp2 = new java.awt.Point();
-    for (int i = 0; i < vertices.size() - 1; i++)
-    {
-      Point3d pt1 = vertices.get(i);
-      Point3d pt2 = vertices.get(i + 1);
-      projector.project(pt1, dp1);
-      projector.project(pt2, dp2);
-      g.drawLine(dp1.x, dp1.y, dp2.x, dp2.y);
-    }
-    if (onNode)
-    {
-      g.setColor(Color.BLACK);
-      Point3d pt = vertices.get(vertices.size() - 1);
-      projector.project(pt, dp1);
-      g.drawOval(dp1.x - 3, dp1.y - 3, 6, 6);
-    }
   }
 
   @Override
-  public void mouseClicked(MouseEvent e)
+  public void mousePressed(MouseEvent e)
   {
     MapViewer mapViewer = getMapViewer();
 
     if (e.getButton() == MouseEvent.BUTTON1)
     {
-      Point3d world = vertices.get(vertices.size() - 1);
-      onNode = snap(e.getPoint(), world);
-
       if (e.getClickCount() == 1 && (!onNode || vertices.size() == 1))
       {
         // add new vertex
-        vertices.add(new Point3d());
+        Point3d world = new Point3d();
+        onNode = snap(e.getPoint(), world);
+        vertices.add(world);
       }
       else
       {
+        // close by doble-click or onNode
         if (e.getClickCount() > 1)
         {
           vertices.remove(vertices.size() - 1);
@@ -163,11 +144,6 @@ public class DrawEdgeTool extends Tool
         mapViewer.repaint();
       }
     }
-  }
-
-  @Override
-  public void mousePressed(MouseEvent e)
-  {
   }
 
   @Override
@@ -216,5 +192,29 @@ public class DrawEdgeTool extends Tool
     }
     projector.unproject(sp, world);
     return false;
+  }
+
+  @Override
+  public void paint(MapViewer mapViewer, Graphics2D g)
+  {
+    g.setColor(Color.MAGENTA);
+    Projector projector = mapViewer.getProjector();
+    java.awt.Point dp1 = new java.awt.Point();
+    java.awt.Point dp2 = new java.awt.Point();
+    for (int i = 0; i < vertices.size() - 1; i++)
+    {
+      Point3d pt1 = vertices.get(i);
+      Point3d pt2 = vertices.get(i + 1);
+      projector.project(pt1, dp1);
+      projector.project(pt2, dp2);
+      g.drawLine(dp1.x, dp1.y, dp2.x, dp2.y);
+    }
+    if (onNode)
+    {
+      g.setColor(Color.BLACK);
+      Point3d pt = vertices.get(vertices.size() - 1);
+      projector.project(pt, dp1);
+      g.drawOval(dp1.x - 4, dp1.y - 4, 8, 8);
+    }
   }
 }

@@ -88,6 +88,11 @@ public class FindRouteTool extends Tool implements MouseListener, Painter
   @Override
   public void mouseClicked(MouseEvent e)
   {
+  }
+
+  @Override
+  public void mousePressed(MouseEvent e)
+  {
     MapViewer mapViewer = getMapViewer();
     if (e.getButton() == MouseEvent.BUTTON1)
     {
@@ -111,11 +116,6 @@ public class FindRouteTool extends Tool implements MouseListener, Painter
       route = null;
     }
     mapViewer.repaint();
-  }
-
-  @Override
-  public void mousePressed(MouseEvent e)
-  {
   }
 
   @Override

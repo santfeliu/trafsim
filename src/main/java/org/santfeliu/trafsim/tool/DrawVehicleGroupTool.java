@@ -70,6 +70,11 @@ public class DrawVehicleGroupTool extends Tool implements MouseListener
   @Override
   public void mouseClicked(MouseEvent e)
   {
+  }
+
+  @Override
+  public void mousePressed(MouseEvent e)
+  {
     MapViewer mapViewer = getMapViewer();
     java.awt.Point dp = e.getPoint();
     Point3d world = new Point3d();
@@ -83,11 +88,6 @@ public class DrawVehicleGroupTool extends Tool implements MouseListener
       mapViewer.repaint();
       trafficSimulator.setModified(true);
     }
-  }
-
-  @Override
-  public void mousePressed(MouseEvent e)
-  {
   }
 
   @Override

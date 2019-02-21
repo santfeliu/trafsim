@@ -46,16 +46,19 @@ import org.santfeliu.trafsim.Feature;
 import org.santfeliu.trafsim.Finder;
 import org.santfeliu.trafsim.Location;
 import org.santfeliu.trafsim.LocationDialog;
+import org.santfeliu.trafsim.Locations;
 import org.santfeliu.trafsim.MapViewer;
 import org.santfeliu.trafsim.MapViewer.Painter;
 import org.santfeliu.trafsim.MapViewer.Selection;
 import org.santfeliu.trafsim.PickInfo;
 import org.santfeliu.trafsim.Projector;
+import org.santfeliu.trafsim.RoadGraph;
 import org.santfeliu.trafsim.RoadGraph.Edge;
 import org.santfeliu.trafsim.Simulation;
 import org.santfeliu.trafsim.TrafficSimulator;
 import org.santfeliu.trafsim.VehicleGroup;
 import org.santfeliu.trafsim.VehicleGroupDialog;
+import org.santfeliu.trafsim.Vehicles;
 
 /**
  *
@@ -99,28 +102,31 @@ public class SelectTool extends Tool
   }
 
   @Override
-  public void mouseClicked(MouseEvent event)
+  public void mouseClicked(MouseEvent e)
   {
     MapViewer mapViewer = getMapViewer();
     Projector projector = mapViewer.getProjector();
     double tolerance = SELECT_PIXELS / projector.getScaleX();
     Point3d worldPoint = new Point3d();
-    projector.unproject(event.getPoint(), worldPoint);
+    projector.unproject(e.getPoint(), worldPoint);
     Simulation simulation = getSimulation();
     pick.clear();
     if (mapViewer.isLocationsVisible())
     {
-      Finder.findByPoint(simulation.getLocations(), worldPoint, tolerance, pick);
+      Locations locations = simulation.getLocations();
+      Finder.findByPoint(locations, worldPoint, tolerance, pick);
     }
     if (mapViewer.isVehiclesVisible())
     {
-      Finder.findByPoint(simulation.getVehicles(), worldPoint, tolerance, pick);
+      Vehicles vehicles = simulation.getVehicles();
+      Finder.findByPoint(vehicles, worldPoint, tolerance, pick);
     }
     if (mapViewer.isEdgesVisible())
     {
-      Finder.findByPoint(simulation.getRoadGraph(), worldPoint, tolerance, pick);
+      RoadGraph roadGraph = simulation.getRoadGraph();
+      Finder.findByPoint(roadGraph, worldPoint, tolerance, pick);
     }
-    setMode(event);
+    setMode(e);
     Feature feature = pick.getFeature();
     if (feature == null)
     {
@@ -130,7 +136,7 @@ public class SelectTool extends Tool
     {
       updateSelection(Collections.singletonList(feature));
     }
-    if (event.getClickCount() > 1)
+    if (e.getClickCount() > 1)
     {
       Selection selection = mapViewer.getSelection();
       if (feature instanceof Edge)
