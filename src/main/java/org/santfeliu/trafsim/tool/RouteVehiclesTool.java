@@ -40,8 +40,8 @@ import javax.vecmath.Point3d;
 import org.santfeliu.trafsim.Group;
 import org.santfeliu.trafsim.Group.Journey;
 import org.santfeliu.trafsim.Indicators;
-import org.santfeliu.trafsim.Location;
 import org.santfeliu.trafsim.Locations;
+import org.santfeliu.trafsim.Locations.Location;
 import org.santfeliu.trafsim.MapViewer;
 import org.santfeliu.trafsim.MapViewer.Painter;
 import org.santfeliu.trafsim.RoadGraph;
@@ -52,8 +52,8 @@ import org.santfeliu.trafsim.RouteFinder;
 import org.santfeliu.trafsim.RouteMeter;
 import org.santfeliu.trafsim.Simulation;
 import org.santfeliu.trafsim.TrafficSimulator;
-import org.santfeliu.trafsim.VehicleGroup;
 import org.santfeliu.trafsim.Vehicles;
+import org.santfeliu.trafsim.Vehicles.VehicleGroup;
 
 /**
  *
@@ -85,7 +85,7 @@ public class RouteVehiclesTool extends Tool implements Painter
     mapViewer.setPainter(this);
     router = new Router();
     router.start();
-    info("routeVehiclesTool.routing");
+    info("routing");
   }
 
   @Override
@@ -219,7 +219,7 @@ public class RouteVehiclesTool extends Tool implements Painter
         indicators.update(vehicleGroup);
         indicators.updateAverages();
       }
-      info("routeVehiclesTool.completed");
+      info("completed");
       mapViewer.repaint();
     }
 

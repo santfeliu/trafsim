@@ -53,8 +53,10 @@ import java.util.List;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector2d;
 import javax.vecmath.Vector3d;
+import org.santfeliu.trafsim.Locations.Location;
 import org.santfeliu.trafsim.RoadGraph.Edge;
 import org.santfeliu.trafsim.RoadGraph.Node;
+import org.santfeliu.trafsim.Vehicles.VehicleGroup;
 import org.santfeliu.trafsim.geom.Polygon;
 /**
  *
@@ -106,7 +108,7 @@ public class MapViewer extends javax.swing.JPanel
   {
     this.trafficSimulator = trafficSimulator;
   }
-  
+
   public Simulation getSimulation()
   {
     if (trafficSimulator == null) return null;

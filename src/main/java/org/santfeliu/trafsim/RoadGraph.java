@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
 import org.santfeliu.trafsim.RoadGraph.Edge;
 import org.santfeliu.trafsim.geom.Geometry;
@@ -49,7 +50,6 @@ import org.santfeliu.trafsim.geom.Geometry;
  */
 public class RoadGraph extends Layer<Edge>
 {
-  private int roundDecimals = 1;
   private final HashMap<Point3d, Node> nodes = new HashMap<Point3d, Node>();
   private final ArrayList<Edge> edges = new ArrayList<Edge>();
 
@@ -86,7 +86,7 @@ public class RoadGraph extends Layer<Edge>
       while (iter.hasNext() && !connected)
       {
         Edge edge = iter.next();
-        connected = edge.getTarget() == next;
+        connected = edge.getTargetNode() == next;
       }
       return connected;
     }
@@ -102,8 +102,8 @@ public class RoadGraph extends Layer<Edge>
 
   public class Edge extends Feature
   {
-    Node source;
-    Node target;
+    Node sourceNode;
+    Node targetNode;
     LineString lineString;
     int speed; // Km/h
     int lanes;
@@ -121,14 +121,14 @@ public class RoadGraph extends Layer<Edge>
       return lineString;
     }
 
-    public Node getSource()
+    public Node getSourceNode()
     {
-      return source;
+      return sourceNode;
     }
 
-    public Node getTarget()
+    public Node getTargetNode()
     {
-      return target;
+      return targetNode;
     }
 
     public int getSpeed()
@@ -153,9 +153,16 @@ public class RoadGraph extends Layer<Edge>
 
     public void reverse()
     {
-      unlinkNodes();
-      Collections.reverse(lineString.getVertices());
-      linkNodes();
+      if (isLinked())
+      {
+        unlinkNodes();
+        Collections.reverse(lineString.getVertices());
+        linkNodes();
+      }
+      else
+      {
+        Collections.reverse(lineString.getVertices());
+      }
     }
 
     @Override
@@ -165,9 +172,74 @@ public class RoadGraph extends Layer<Edge>
     }
 
     @Override
+    public void setGeometry(Geometry geometry)
+    {
+      if (geometry instanceof LineString)
+      {
+        if (isLinked())
+        {
+          unlinkNodes();
+          lineString = (LineString)geometry;
+          linkNodes();
+        }
+        else
+        {
+          lineString = (LineString)geometry;
+        }
+      }
+    }
+
+    @Override
+    public Layer getLayer()
+    {
+      return RoadGraph.this;
+    }
+
+    @Override
+    public void add()
+    {
+      if (!isLinked())
+      {
+        linkNodes();
+        edges.add(this);
+      }
+    }
+
+    @Override
+    public void remove()
+    {
+      if (isLinked())
+      {
+        unlinkNodes();
+        edges.remove(this);
+      }
+    }
+    
+    @Override
+    public boolean isRemoved()
+    {
+      return !isLinked();
+    }
+
+    @Override
+    public void transform(Matrix4d matrix)
+    {
+      if (isLinked())
+      {
+        unlinkNodes();
+        super.transform(matrix);
+        linkNodes();
+      }
+      else
+      {
+        super.transform(matrix);
+      }
+    }
+
+    @Override
     public String toString()
     {
-      return "Edge(source: " + source + ", target: " + target + ")";
+      return "Edge(source: " + sourceNode + ", target: " + targetNode + ")";
     }
 
     public Indicators getIndicators()
@@ -183,42 +255,64 @@ public class RoadGraph extends Layer<Edge>
       attributes.put("LANES", lanes);
     }
 
+    boolean isLinked()
+    {
+      return sourceNode != null;
+    }
+
     void linkNodes()
     {
       List<Point3d> vertices = lineString.getVertices();
       if (vertices.size() < 1) return;
 
-      Point3d startPoint = round(vertices.get(0));
-      Point3d endPoint = round(vertices.get(vertices.size() - 1));
-
-      source = nodes.get(startPoint);
-      if (source == null)
+      // link source node
+      Point3d startPoint = vertices.get(0);
+      sourceNode = nodes.get(startPoint);
+      if (sourceNode == null)
       {
-        source = new Node(new Point(startPoint));
-        nodes.put(startPoint, source);
+        startPoint = new Point3d(startPoint); //immutable copy
+        sourceNode = new Node(new Point(startPoint));
+        nodes.put(startPoint, sourceNode);
       }
-      target = nodes.get(endPoint);
-      if (target == null)
+      if (!sourceNode.outEdges.contains(this))
       {
-        target = new Node(new Point(endPoint));
-        nodes.put(endPoint, target);
+        sourceNode.outEdges.add(this);
       }
-      source.outEdges.add(this);
-      target.inEdges.add(this);
+      
+      // link target node
+      Point3d endPoint = vertices.get(vertices.size() - 1);
+      targetNode = nodes.get(endPoint);
+      if (targetNode == null)
+      {
+        endPoint = new Point3d(endPoint); // immutable copy
+        targetNode = new Node(new Point(endPoint));
+        nodes.put(endPoint, targetNode);
+      }
+      if (!targetNode.inEdges.contains(this))
+      {
+        targetNode.inEdges.add(this);
+      }
     }
 
     void unlinkNodes()
     {
-      source.outEdges.remove(this);
-      target.inEdges.remove(this);
-
-      if (source.inEdges.isEmpty() && source.outEdges.isEmpty())
+      if (sourceNode != null)
       {
-        nodes.remove(source.point.getPosition());
+        sourceNode.outEdges.remove(this);
+        if (sourceNode.inEdges.isEmpty() && sourceNode.outEdges.isEmpty())
+        {
+          nodes.remove(sourceNode.point.getPosition());
+        }
+        sourceNode = null;
       }
-      if (target.inEdges.isEmpty() && target.outEdges.isEmpty())
+      if (targetNode != null)
       {
-        nodes.remove(target.point.getPosition());
+        targetNode.inEdges.remove(this);
+        if (targetNode.inEdges.isEmpty() && targetNode.outEdges.isEmpty())
+        {
+          nodes.remove(targetNode.point.getPosition());
+        }
+        targetNode = null;
       }
     }
 
@@ -240,16 +334,6 @@ public class RoadGraph extends Layer<Edge>
         vehicleCount = 0;
       }
     }
-  }
-
-  public int getRoundDecimals()
-  {
-    return roundDecimals;
-  }
-
-  public void setRoundDecimals(int roundDecimals)
-  {
-    this.roundDecimals = roundDecimals;
   }
 
   public Edge newEdge(LineString lineString, int speed, int lanes)
@@ -290,37 +374,42 @@ public class RoadGraph extends Layer<Edge>
   }
 
   @Override
-  public void add(Edge edge)
-  {
-    edges.add(edge);
-    edge.linkNodes();
-  }
-
-  @Override
-  public boolean remove(Feature feature)
-  {
-    if (feature instanceof Edge)
-    {
-      Edge edge = (Edge)feature;
-      edge.unlinkNodes();
-      return edges.remove(edge);
-    }
-    return false;
-  }
-
-  @Override
   public void clear()
   {
     nodes.clear();
+    for (Edge edge : edges)
+    {
+      edge.sourceNode = null;
+      edge.targetNode = null;
+    }
     edges.clear();
   }
-
-  private Point3d round(Point3d pt)
+  
+  public void snapToGrid(double gridSize)
   {
-    double round = Math.pow(10, roundDecimals);
-    pt.x = (Math.round(pt.x * round) / round);
-    pt.y = (Math.round(pt.y * round) / round);
-    pt.z = (Math.round(pt.z * round) / round);
-    return pt;
+    ArrayList<Edge> edgeList = new ArrayList<Edge>();
+    edgeList.addAll(edges);
+    nodes.clear();
+    edges.clear();
+    for (Edge edge : edgeList)
+    {
+      List<Point3d> vertices = edge.getLineString().getVertices();
+      Point3d startPoint = vertices.get(0);
+      Point3d endPoint = vertices.get(vertices.size() - 1);
+      round(startPoint, gridSize);
+      round(endPoint, gridSize);
+      if (!startPoint.equals(endPoint))   
+      {
+        edge.linkNodes();
+        edges.add(edge);
+      }
+    }
+  }
+  
+  private void round(Point3d point, double gridSize)
+  {
+    point.x = Math.round(point.x / gridSize) * gridSize;
+    point.y = Math.round(point.y / gridSize) * gridSize;
+    point.z = Math.round(point.z / gridSize) * gridSize;
   }
 }

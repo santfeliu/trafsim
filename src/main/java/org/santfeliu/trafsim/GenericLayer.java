@@ -33,22 +33,29 @@ package org.santfeliu.trafsim;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collection;
+import org.santfeliu.trafsim.GenericLayer.GenericFeature;
+import org.santfeliu.trafsim.geom.Geometry;
 
 /**
  *
  * @author realor
  */
-public class GenericLayer extends Layer<GenericEntity>
+public class GenericLayer extends Layer<GenericFeature>
 {
   private String label;
-  private final ArrayList<GenericEntity> features =
-    new ArrayList<GenericEntity>();
+  private final ArrayList<GenericFeature> features =
+    new ArrayList<GenericFeature>();
   private Color color;
 
   public GenericLayer(String label, Color color)
   {
     this.label = label;
     this.color = color;
+  }
+
+  public GenericFeature newFeature(Geometry geometry)
+  {
+    return new GenericFeature(geometry);
   }
 
   public String getLabel()
@@ -66,6 +73,11 @@ public class GenericLayer extends Layer<GenericEntity>
     return color;
   }
 
+  public void setColor(Color color)
+  {
+    this.color = color;
+  }
+
   @Override
   public String getName()
   {
@@ -73,26 +85,74 @@ public class GenericLayer extends Layer<GenericEntity>
   }
 
   @Override
-  public void add(GenericEntity feature)
-  {
-    features.add(feature);
-  }
-
-  @Override
-  public boolean remove(Feature feature)
-  {
-    return false;
-  }
-
-  @Override
   public void clear()
   {
+    for (GenericFeature feature : features)
+    {
+      feature.removed = true;
+    }
     features.clear();
   }
 
   @Override
-  public Collection<GenericEntity> getFeatures()
+  public Collection<GenericFeature> getFeatures()
   {
     return features;
+  }
+
+  public class GenericFeature extends Feature
+  {
+    private Geometry geometry;
+    private boolean removed;
+
+    GenericFeature(Geometry geometry)
+    {
+      this.geometry = geometry;
+      this.removed = true;
+    }
+
+    @Override
+    public Geometry getGeometry()
+    {
+      return geometry;
+    }
+
+    @Override
+    public void setGeometry(Geometry geometry)
+    {
+      this.geometry = geometry;
+    }
+
+    @Override
+    public Layer getLayer()
+    {
+      return GenericLayer.this;
+    }
+
+    @Override
+    public void add()
+    {
+      if (removed)
+      {
+        features.add(this);
+        removed = false;
+      }
+    }
+
+    @Override
+    public void remove()
+    {
+      if (!removed)
+      {
+        features.remove(this);
+        removed = true;
+      }
+    }
+    
+    @Override
+    public boolean isRemoved()
+    {
+      return removed;
+    }
   }
 }

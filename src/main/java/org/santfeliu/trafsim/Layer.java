@@ -42,26 +42,6 @@ public abstract class Layer<T extends Feature>
   public abstract String getName();
   
   public abstract Collection<T> getFeatures();
-
-  public abstract void add(T feature);
-  
-  public abstract boolean remove(Feature feature);
   
   public abstract void clear();
-  
-  public void addAll(Collection<T> features)
-  {
-    for (T feature : features)
-    {
-      add(feature);
-    }
-  }
-
-  public void removeAll(Collection<T> features)
-  {
-    for (T feature : features)
-    {
-      remove(feature);
-    }
-  }
 }

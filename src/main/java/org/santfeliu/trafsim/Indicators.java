@@ -31,6 +31,7 @@
 package org.santfeliu.trafsim;
 
 import org.santfeliu.trafsim.RoadGraph.Edge;
+import org.santfeliu.trafsim.Vehicles.VehicleGroup;
 
 /**
  *

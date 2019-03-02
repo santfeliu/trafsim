@@ -34,9 +34,9 @@ import java.awt.Cursor;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import javax.vecmath.Point3d;
-import org.santfeliu.trafsim.Location;
 import org.santfeliu.trafsim.LocationDialog;
 import org.santfeliu.trafsim.MapViewer;
+import org.santfeliu.trafsim.Simulation;
 import org.santfeliu.trafsim.TrafficSimulator;
 import org.santfeliu.trafsim.geom.Point;
 
@@ -63,7 +63,7 @@ public class DrawLocationTool extends Tool implements MouseListener
     MapViewer mapViewer = getMapViewer();
     mapViewer.addMouseListener(this);
     mapViewer.setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
-    info("drawLocationTool.info");
+    info("info");
   }
 
   @Override
@@ -83,15 +83,15 @@ public class DrawLocationTool extends Tool implements MouseListener
   public void mousePressed(MouseEvent e)
   {
     MapViewer mapViewer = getMapViewer();
+    Simulation simulation = mapViewer.getSimulation();
     java.awt.Point dp = e.getPoint();
     Point3d world = new Point3d();
     mapViewer.getProjector().unproject(dp, world);
     LocationDialog dialog = new LocationDialog(null, true);
     if (dialog.showDialog())
     {
-      Location location = new Location(dialog.getLocationName(),
-        dialog.getLocationLabel(), new Point(world), dialog.isOrigin());
-      mapViewer.getSimulation().getLocations().getFeatures().add(location);
+      simulation.getLocations().newLocation(dialog.getLocationName(),
+        dialog.getLocationLabel(), new Point(world), dialog.isOrigin()).add();
       mapViewer.repaint();
       trafficSimulator.setModified(true);
     }

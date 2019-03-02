@@ -44,9 +44,9 @@ import org.santfeliu.trafsim.Box;
 import org.santfeliu.trafsim.EdgeDialog;
 import org.santfeliu.trafsim.Feature;
 import org.santfeliu.trafsim.Finder;
-import org.santfeliu.trafsim.Location;
 import org.santfeliu.trafsim.LocationDialog;
 import org.santfeliu.trafsim.Locations;
+import org.santfeliu.trafsim.Locations.Location;
 import org.santfeliu.trafsim.MapViewer;
 import org.santfeliu.trafsim.MapViewer.Painter;
 import org.santfeliu.trafsim.MapViewer.Selection;
@@ -56,9 +56,9 @@ import org.santfeliu.trafsim.RoadGraph;
 import org.santfeliu.trafsim.RoadGraph.Edge;
 import org.santfeliu.trafsim.Simulation;
 import org.santfeliu.trafsim.TrafficSimulator;
-import org.santfeliu.trafsim.VehicleGroup;
 import org.santfeliu.trafsim.VehicleGroupDialog;
 import org.santfeliu.trafsim.Vehicles;
+import org.santfeliu.trafsim.Vehicles.VehicleGroup;
 
 /**
  *
@@ -67,7 +67,6 @@ import org.santfeliu.trafsim.Vehicles;
 public class SelectTool extends Tool
   implements MouseListener, MouseMotionListener, Painter
 {
-  private static final int SELECT_PIXELS = 8;
   private final PickInfo pick = new PickInfo();
   private Point3d firstCorner;
   private Point3d lastCorner;
@@ -94,7 +93,7 @@ public class SelectTool extends Tool
     mapViewer.addMouseListener(this);
     mapViewer.addMouseMotionListener(this);
     mapViewer.setPainter(this);
-    info("selectTool.info");
+    info("info");
   }
 
   @Override
@@ -121,17 +120,17 @@ public class SelectTool extends Tool
     if (mapViewer.isLocationsVisible())
     {
       Locations locations = simulation.getLocations();
-      Finder.findByPoint(locations, worldPoint, tolerance, pick);
+      Finder.findByPoint(locations.getFeatures(), worldPoint, tolerance, pick);
     }
     if (mapViewer.isVehiclesVisible())
     {
       Vehicles vehicles = simulation.getVehicles();
-      Finder.findByPoint(vehicles, worldPoint, tolerance, pick);
+      Finder.findByPoint(vehicles.getFeatures(), worldPoint, tolerance, pick);
     }
     if (mapViewer.isEdgesVisible())
     {
       RoadGraph roadGraph = simulation.getRoadGraph();
-      Finder.findByPoint(roadGraph, worldPoint, tolerance, pick);
+      Finder.findByPoint(roadGraph.getFeatures(), worldPoint, tolerance, pick);
     }
     setMode(e);
     Feature feature = pick.getFeature();
@@ -235,15 +234,18 @@ public class SelectTool extends Tool
         HashSet<Feature> selected = new HashSet<Feature>();
         if (mapViewer.isLocationsVisible())
         {
-          Finder.findByBox(simulation.getLocations(), box, selected);
+          Locations locations = simulation.getLocations();
+          Finder.findByBox(locations.getFeatures(), box, selected);
         }
         if (mapViewer.isVehiclesVisible())
         {
-          Finder.findByBox(simulation.getVehicles(), box, selected);
+          Vehicles vehicles = simulation.getVehicles();
+          Finder.findByBox(vehicles.getFeatures(), box, selected);
         }
         if (mapViewer.isEdgesVisible())
         {
-          Finder.findByBox(simulation.getRoadGraph(), box, selected);
+          RoadGraph roadGraph = simulation.getRoadGraph();
+          Finder.findByBox(roadGraph.getFeatures(), box, selected);
         }
         updateSelection(selected);
       }

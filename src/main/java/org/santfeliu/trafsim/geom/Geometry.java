@@ -30,6 +30,7 @@
  */
 package org.santfeliu.trafsim.geom;
 
+import javax.vecmath.Matrix4d;
 import org.santfeliu.trafsim.Box;
 
 /**
@@ -38,5 +39,24 @@ import org.santfeliu.trafsim.Box;
  */
 public abstract class Geometry
 {
-  public abstract Box getBoundingBox();
+  private Box boundingBox;
+
+  public abstract void transform(Matrix4d matrix);
+
+  public Box getBoundingBox()
+  {
+    if (boundingBox == null)
+    {
+      boundingBox = new Box();
+      extend(boundingBox);
+    }
+    return boundingBox;
+  }
+
+  protected void updateBoundingBox()
+  {
+    boundingBox = null;
+  }
+
+  protected abstract void extend(Box box);
 }

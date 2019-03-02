@@ -33,6 +33,10 @@ package org.santfeliu.trafsim;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
+import org.santfeliu.trafsim.Locations.Location;
+import org.santfeliu.trafsim.geom.Geometry;
+import org.santfeliu.trafsim.geom.Point;
 
 /**
  *
@@ -48,6 +52,12 @@ public class Locations extends Layer<Location>
     return "Locations";
   }
 
+  public Location newLocation(String name, String label, Point point,
+    boolean origin)
+  {
+    return new Location(name, label, point, origin);
+  }
+
   public Location getLocation(String name)
   {
     Iterator<Location> iter = features.iterator();
@@ -60,24 +70,12 @@ public class Locations extends Layer<Location>
   }
 
   @Override
-  public void add(Location location)
-  {
-    features.add(location);
-  }
-
-  @Override
-  public boolean remove(Feature feature)
-  {
-    if (feature instanceof Location)
-    {
-      return features.remove((Location)feature);
-    }
-    return false;
-  }
-
-  @Override
   public void clear()
   {
+    for (Location location : features)
+    {
+      location.removed = true;
+    }    
     features.clear();
   }
 
@@ -85,5 +83,122 @@ public class Locations extends Layer<Location>
   public Collection<Location> getFeatures()
   {
     return features;
+  }
+
+  public class Location extends Feature
+  {
+    private String name;
+    private String label;
+    private Point point;
+    private boolean origin;
+    private boolean removed;
+
+    Location(String name, String label, Point point, boolean origin)
+    {
+      this.name = name;
+      this.label = label;
+      this.point = point;
+      this.origin = origin;
+      this.removed = true;
+    }
+
+    public String getName()
+    {
+      return name;
+    }
+
+    public void setName(String name)
+    {
+      this.name = name;
+    }
+
+    public String getLabel()
+    {
+      return label;
+    }
+
+    public void setLabel(String label)
+    {
+      this.label = label;
+    }
+
+    public Point getPoint()
+    {
+      return point;
+    }
+
+    public void setPoint(Point point)
+    {
+      this.point = point;
+    }
+
+    public boolean isOrigin()
+    {
+      return origin;
+    }
+
+    public void setOrigin(boolean origin)
+    {
+      this.origin = origin;
+    }
+
+    public boolean isDestination()
+    {
+      return !origin;
+    }
+
+    @Override
+    public Geometry getGeometry()
+    {
+      return point;
+    }
+
+    @Override
+    public void setGeometry(Geometry geometry)
+    {
+      if (geometry instanceof Point)
+      {
+        point = (Point)geometry;
+      }
+    }
+
+    @Override
+    public Layer getLayer()
+    {
+      return Locations.this;
+    }
+
+    @Override
+    public void add()
+    {
+      if (removed)
+      {
+        features.add(this);
+        removed = false;
+      }
+    }
+
+    @Override
+    public void remove()
+    {
+      if (!removed)
+      {
+        features.remove(this);
+        removed = true;
+      }
+    }
+    
+    @Override
+    public boolean isRemoved()
+    {
+      return removed;
+    }
+
+    @Override
+    public void loadAttributes(Map attributes)
+    {
+      attributes.put("NAME", name);
+      attributes.put("LABEL", label);
+    }
   }
 }

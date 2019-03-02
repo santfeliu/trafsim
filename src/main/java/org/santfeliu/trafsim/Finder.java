@@ -46,11 +46,9 @@ import org.santfeliu.trafsim.geom.Polygon;
  */
 public class Finder
 {
-  public static boolean findByPoint(Layer layer, Point3d worldPoint,
-    double tolerance, PickInfo pick)
+  public static boolean findVertex(Collection<? extends Feature> features,
+    Point3d worldPoint, double tolerance, PickInfo pick)
   {
-    Point3d onEdge = new Point3d();
-    Collection<Feature> features = layer.getFeatures();
     for (Feature feature : features)
     {
       Geometry geometry = feature.getGeometry();
@@ -65,6 +63,107 @@ public class Finder
           pick.feature = feature;
           pick.onFeaturePoint.set(position);
           pick.distance = distance;
+          pick.index = 0;
+        }
+      }
+      else if (geometry instanceof LineString)
+      {
+        LineString lineString = (LineString)geometry;
+        List<Point3d> vertices = lineString.getVertices();
+        for (int i = 0; i < vertices.size(); i++)
+        {
+          Point3d point = vertices.get(i);
+          double distance = point.distance(worldPoint);
+          if (distance <= tolerance && distance < pick.distance)
+          {
+            pick.worldPoint = worldPoint;
+            pick.feature = feature;
+            pick.onFeaturePoint.set(point);
+            pick.distance = distance;
+            pick.index = i;
+          }
+        }
+      }
+      else if (geometry instanceof Polygon)
+      {
+        // TODO: select feature if it is inside polygon
+      }
+    }
+    return pick.feature != null;
+  }
+
+  public static boolean findVertices(Collection<? extends Feature> features,
+    Point3d worldPoint, double tolerance, List<PickInfo> picks)
+  {
+    for (Feature feature : features)
+    {
+      Geometry geometry = feature.getGeometry();
+      if (geometry instanceof Point)
+      {
+        Point point = (Point)geometry;
+        Point3d position = point.getPosition();
+        double distance = position.distance(worldPoint);
+        if (distance <= tolerance)
+        {
+          PickInfo pick = new PickInfo();
+          pick.worldPoint = worldPoint;
+          pick.feature = feature;
+          pick.onFeaturePoint.set(position);
+          pick.distance = distance;
+          pick.index = 0;
+          picks.add(pick);
+        }
+      }
+      else if (geometry instanceof LineString)
+      {
+        PickInfo pick = new PickInfo();
+        LineString lineString = (LineString)geometry;
+        List<Point3d> vertices = lineString.getVertices();
+        for (int i = 0; i < vertices.size(); i++)
+        {
+          Point3d point = vertices.get(i);
+          double distance = point.distance(worldPoint);
+          if (distance <= tolerance && distance < pick.distance)
+          {
+            pick.worldPoint = worldPoint;
+            pick.feature = feature;
+            pick.onFeaturePoint.set(point);
+            pick.distance = distance;
+            pick.index = i;
+          }
+        }
+        if (pick.feature != null)
+        {
+          picks.add(pick);
+        }
+      }
+      else if (geometry instanceof Polygon)
+      {
+        // TODO: select feature if it is inside polygon
+      }
+    }
+    return picks.size() > 0;
+  }
+
+  public static boolean findByPoint(Collection<? extends Feature> features,
+    Point3d worldPoint, double tolerance, PickInfo pick)
+  {
+    Point3d onEdge = new Point3d();
+    for (Feature feature : features)
+    {
+      Geometry geometry = feature.getGeometry();
+      if (geometry instanceof Point)
+      {
+        Point point = (Point)geometry;
+        Point3d position = point.getPosition();
+        double distance = position.distance(worldPoint);
+        if (distance <= tolerance && distance < pick.distance)
+        {
+          pick.worldPoint = worldPoint;
+          pick.feature = feature;
+          pick.onFeaturePoint.set(position);
+          pick.distance = distance;
+          pick.index = 0;
         }
       }
       else if (geometry instanceof LineString)
@@ -83,7 +182,7 @@ public class Finder
             pick.feature = feature;
             pick.onFeaturePoint.set(onEdge);
             pick.distance = distance;
-            pick.edgeSegmentIndex = i;
+            pick.index = i;
           }
         }
       }
@@ -95,10 +194,10 @@ public class Finder
     return pick.feature != null;
   }
 
-  public static boolean findByBox(Layer layer, Box box, Set<Feature> selection)
+  public static boolean findByBox(Collection<? extends Feature> features,
+    Box box, Set<Feature> selection)
   {
     boolean found = false;
-    Collection<Feature> features = layer.getFeatures();
     for (Feature feature : features)
     {
       Geometry geometry = feature.getGeometry();
@@ -109,6 +208,23 @@ public class Finder
       }
     }
     return found;
+  }
+
+  public static boolean snapNode(RoadGraph roadGraph,
+    Point3d selectPoint, Point3d snapPoint, double tolerance)
+  {
+    Collection<RoadGraph.Node> nodes = roadGraph.getNodes();
+    for (RoadGraph.Node node : nodes)
+    {
+      Point3d nodePoint = node.getPoint().getPosition();
+      if (nodePoint.distance(selectPoint) <= tolerance)
+      {
+        snapPoint.set(nodePoint);
+        return true;
+      }
+    }
+    snapPoint.set(selectPoint);
+    return false;
   }
 
   private static double pointToSegmentDistance(Point3d pt,

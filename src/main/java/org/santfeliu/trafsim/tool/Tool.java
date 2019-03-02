@@ -30,8 +30,14 @@
  */
 package org.santfeliu.trafsim.tool;
 
+import java.awt.event.ActionEvent;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.vecmath.Point3d;
+import org.santfeliu.trafsim.Finder;
 import org.santfeliu.trafsim.MapViewer;
 import org.santfeliu.trafsim.Projector;
+import org.santfeliu.trafsim.RoadGraph;
 import org.santfeliu.trafsim.Simulation;
 import org.santfeliu.trafsim.TrafficSimulator;
 
@@ -39,13 +45,22 @@ import org.santfeliu.trafsim.TrafficSimulator;
  *
  * @author realor
  */
-public abstract class Tool
+public abstract class Tool extends AbstractAction
 {
+  protected static final int SELECT_PIXELS = 8;
+  protected static final int SNAP_PIXELS = 8;
   protected TrafficSimulator trafficSimulator;
 
   public Tool(TrafficSimulator trafficSimulator)
   {
     this.trafficSimulator = trafficSimulator;
+    initValues();
+  }
+
+  @Override
+  public void actionPerformed(ActionEvent e)
+  {
+    trafficSimulator.start(this);
   }
 
   public abstract String getName();
@@ -71,6 +86,37 @@ public abstract class Tool
 
   public void info(String message)
   {
-    trafficSimulator.info(message);
+    trafficSimulator.info(getName() + "Tool." + message);
+  }
+
+  protected void project(Point3d worldPoint, java.awt.Point dp)
+  {
+    MapViewer mapViewer = getMapViewer();
+    Projector projector = mapViewer.getProjector();
+    projector.project(worldPoint, dp);
+  }
+
+  protected void unproject(java.awt.Point dp, Point3d worldPoint)
+  {
+    MapViewer mapViewer = getMapViewer();
+    Projector projector = mapViewer.getProjector();
+    projector.unproject(dp, worldPoint);
+  }
+
+  protected boolean snapNode(java.awt.Point dp, Point3d snapPoint)
+  {
+    MapViewer mapViewer = getMapViewer();
+    Projector projector = mapViewer.getProjector();
+    Point3d selectPoint = new Point3d();
+    projector.unproject(dp, selectPoint);
+
+    double tolerance = SNAP_PIXELS / projector.getScaleX();
+    RoadGraph roadGraph = getSimulation().getRoadGraph();
+    return Finder.snapNode(roadGraph, selectPoint, snapPoint, tolerance);
+  }
+
+  private void initValues()
+  {
+    putValue(Action.NAME, trafficSimulator.getMessage(getName() + "Tool.name"));
   }
 }

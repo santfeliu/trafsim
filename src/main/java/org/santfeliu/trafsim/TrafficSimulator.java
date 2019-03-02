@@ -56,7 +56,9 @@ import org.santfeliu.trafsim.tool.DrawVehicleGroupTool;
 import org.santfeliu.trafsim.tool.SelectTool;
 import org.santfeliu.trafsim.io.SimulationReader;
 import org.santfeliu.trafsim.io.SimulationWriter;
+import org.santfeliu.trafsim.tool.EditVerticesTool;
 import org.santfeliu.trafsim.tool.FindRouteTool;
+import org.santfeliu.trafsim.tool.MoveTool;
 import org.santfeliu.trafsim.tool.RouteVehiclesTool;
 
 /**
@@ -71,6 +73,8 @@ public class TrafficSimulator extends javax.swing.JFrame
   private Simulation simulation;
   private File lastFile;
   private final SelectTool selectTool;
+  private final MoveTool moveTool;
+  private final EditVerticesTool editVerticesTool;
   private final DrawEdgeTool drawEdgeTool;
   private final DrawLocationTool drawLocationTool;
   private final DrawVehicleGroupTool drawVehicleGroupTool;
@@ -85,18 +89,19 @@ public class TrafficSimulator extends javax.swing.JFrame
    */
   public TrafficSimulator()
   {
-    initComponents();
-    mapViewer.setTrafficSimulator(this);
-    setFrameIcons();
     resourceBundle = ResourceBundle.getBundle(
       "org/santfeliu/trafsim/resources/TrafficSimulator");
-    setSimulation(new Simulation());
     selectTool = new SelectTool(this);
+    moveTool = new MoveTool(this);
+    editVerticesTool = new EditVerticesTool(this);
     drawEdgeTool = new DrawEdgeTool(this);
     drawLocationTool = new DrawLocationTool(this);
     drawVehicleGroupTool = new DrawVehicleGroupTool(this);
     findRouteTool = new FindRouteTool(this);
     routeVehiclesTool = new RouteVehiclesTool(this);
+    initComponents();
+    setFrameIcons();
+    setSimulation(new Simulation());
     start(selectTool);
   }
 
@@ -157,7 +162,7 @@ public class TrafficSimulator extends javax.swing.JFrame
     }
     currentTool = command;
     currentTool.start();
-    String key = "menu." + currentTool.getName() + "Tool";
+    String key = currentTool.getName() + "Tool.name";
     toolNameLabel.setText(getMessage(key) + ":");
   }
 
@@ -230,8 +235,9 @@ public class TrafficSimulator extends javax.swing.JFrame
     exitMenuItem = new javax.swing.JMenuItem();
     editMenu = new javax.swing.JMenu();
     deleteMenuItem = new javax.swing.JMenuItem();
-    edgeMenu = new javax.swing.JMenu();
+    edgesMenu = new javax.swing.JMenu();
     reverseEdgeMenuItem = new javax.swing.JMenuItem();
+    snapToGridMenuItem = new javax.swing.JMenuItem();
     editSeparator1 = new javax.swing.JPopupMenu.Separator();
     groupsMenuItem = new javax.swing.JMenuItem();
     simulationPropsMenuItem = new javax.swing.JMenuItem();
@@ -251,6 +257,8 @@ public class TrafficSimulator extends javax.swing.JFrame
     indicatorsCheckBoxMenuItem = new javax.swing.JCheckBoxMenuItem();
     toolsMenu = new javax.swing.JMenu();
     selectMenuItem = new javax.swing.JMenuItem();
+    moveMenuItem = new javax.swing.JMenuItem();
+    editVerticesMenuItem = new javax.swing.JMenuItem();
     toolsSeparator1 = new javax.swing.JPopupMenu.Separator();
     drawEdgeMenuItem = new javax.swing.JMenuItem();
     drawLocationMenuItem = new javax.swing.JMenuItem();
@@ -272,6 +280,7 @@ public class TrafficSimulator extends javax.swing.JFrame
     });
 
     mapViewer.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
+    mapViewer.setTrafficSimulator(this);
     getContentPane().add(mapViewer, java.awt.BorderLayout.CENTER);
 
     statusPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(2, 2, 2, 2));
@@ -377,7 +386,7 @@ public class TrafficSimulator extends javax.swing.JFrame
     });
     editMenu.add(deleteMenuItem);
 
-    edgeMenu.setText(bundle.getString("menu.edge")); // NOI18N
+    edgesMenu.setText(bundle.getString("menu.edges")); // NOI18N
 
     reverseEdgeMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_I, java.awt.event.InputEvent.CTRL_MASK));
     reverseEdgeMenuItem.setText(bundle.getString("menu.reverse")); // NOI18N
@@ -388,9 +397,19 @@ public class TrafficSimulator extends javax.swing.JFrame
         reverseEdgeMenuItemActionPerformed(evt);
       }
     });
-    edgeMenu.add(reverseEdgeMenuItem);
+    edgesMenu.add(reverseEdgeMenuItem);
 
-    editMenu.add(edgeMenu);
+    snapToGridMenuItem.setText(bundle.getString("menu.snapToGrid")); // NOI18N
+    snapToGridMenuItem.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        snapToGridMenuItemActionPerformed(evt);
+      }
+    });
+    edgesMenu.add(snapToGridMenuItem);
+
+    editMenu.add(edgesMenu);
     editMenu.add(editSeparator1);
 
     groupsMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_G, java.awt.event.InputEvent.CTRL_MASK));
@@ -542,66 +561,30 @@ public class TrafficSimulator extends javax.swing.JFrame
 
     toolsMenu.setText(bundle.getString("menu.tools")); // NOI18N
 
-    selectMenuItem.setText(bundle.getString("menu.selectTool")); // NOI18N
-    selectMenuItem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        selectMenuItemActionPerformed(evt);
-      }
-    });
+    selectMenuItem.setAction(selectTool);
     toolsMenu.add(selectMenuItem);
+
+    moveMenuItem.setAction(moveTool);
+    toolsMenu.add(moveMenuItem);
+
+    editVerticesMenuItem.setAction(editVerticesTool);
+    toolsMenu.add(editVerticesMenuItem);
     toolsMenu.add(toolsSeparator1);
 
-    drawEdgeMenuItem.setText(bundle.getString("menu.drawEdgeTool")); // NOI18N
-    drawEdgeMenuItem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        drawEdgeMenuItemActionPerformed(evt);
-      }
-    });
+    drawEdgeMenuItem.setAction(drawEdgeTool);
     toolsMenu.add(drawEdgeMenuItem);
 
-    drawLocationMenuItem.setText(bundle.getString("menu.drawLocationTool")); // NOI18N
-    drawLocationMenuItem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        drawLocationMenuItemActionPerformed(evt);
-      }
-    });
+    drawLocationMenuItem.setAction(drawLocationTool);
     toolsMenu.add(drawLocationMenuItem);
 
-    drawVehicleGroupMenuItem.setText(bundle.getString("menu.drawVehicleGroupTool")); // NOI18N
-    drawVehicleGroupMenuItem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        drawVehicleGroupMenuItemActionPerformed(evt);
-      }
-    });
+    drawVehicleGroupMenuItem.setAction(drawVehicleGroupTool);
     toolsMenu.add(drawVehicleGroupMenuItem);
     toolsMenu.add(toolsSeparator2);
 
-    findRouteMenuItem.setText(bundle.getString("menu.findRouteTool")); // NOI18N
-    findRouteMenuItem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        findRouteMenuItemActionPerformed(evt);
-      }
-    });
+    findRouteMenuItem.setAction(findRouteTool);
     toolsMenu.add(findRouteMenuItem);
 
-    routeVehiclesMenuItem.setText(bundle.getString("menu.routeVehiclesTool")); // NOI18N
-    routeVehiclesMenuItem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        routeVehiclesMenuItemActionPerformed(evt);
-      }
-    });
+    routeVehiclesMenuItem.setAction(routeVehiclesTool);
     toolsMenu.add(routeVehiclesMenuItem);
 
     menuBar.add(toolsMenu);
@@ -773,36 +756,16 @@ public class TrafficSimulator extends javax.swing.JFrame
     }
   }//GEN-LAST:event_saveMenuItemActionPerformed
 
-  private void selectMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_selectMenuItemActionPerformed
-  {//GEN-HEADEREND:event_selectMenuItemActionPerformed
-    start(selectTool);
-  }//GEN-LAST:event_selectMenuItemActionPerformed
-
-  private void drawEdgeMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_drawEdgeMenuItemActionPerformed
-  {//GEN-HEADEREND:event_drawEdgeMenuItemActionPerformed
-    start(drawEdgeTool);
-  }//GEN-LAST:event_drawEdgeMenuItemActionPerformed
-
   private void deleteMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_deleteMenuItemActionPerformed
   {//GEN-HEADEREND:event_deleteMenuItemActionPerformed
     Selection selection = mapViewer.getSelection();
     for (Feature feature : selection)
     {
-      simulation.remove(feature);
+      feature.remove();
     }
     selection.clear();
     setModified(true);
   }//GEN-LAST:event_deleteMenuItemActionPerformed
-
-  private void drawLocationMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_drawLocationMenuItemActionPerformed
-  {//GEN-HEADEREND:event_drawLocationMenuItemActionPerformed
-    start(drawLocationTool);
-  }//GEN-LAST:event_drawLocationMenuItemActionPerformed
-
-  private void drawVehicleGroupMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_drawVehicleGroupMenuItemActionPerformed
-  {//GEN-HEADEREND:event_drawVehicleGroupMenuItemActionPerformed
-    start(drawVehicleGroupTool);
-  }//GEN-LAST:event_drawVehicleGroupMenuItemActionPerformed
 
   private void edgesCheckBoxMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_edgesCheckBoxMenuItemActionPerformed
   {//GEN-HEADEREND:event_edgesCheckBoxMenuItemActionPerformed
@@ -849,11 +812,6 @@ public class TrafficSimulator extends javax.swing.JFrame
     mapViewer.setOriginsVisible(originsCheckBoxMenuItem.isSelected());
   }//GEN-LAST:event_originsCheckBoxMenuItemActionPerformed
 
-  private void findRouteMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_findRouteMenuItemActionPerformed
-  {//GEN-HEADEREND:event_findRouteMenuItemActionPerformed
-    start(findRouteTool);
-  }//GEN-LAST:event_findRouteMenuItemActionPerformed
-
   private void groupsMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_groupsMenuItemActionPerformed
   {//GEN-HEADEREND:event_groupsMenuItemActionPerformed
     GroupsDialog dialog = new GroupsDialog(this, true);
@@ -865,11 +823,6 @@ public class TrafficSimulator extends javax.swing.JFrame
       setModified(true);
     }
   }//GEN-LAST:event_groupsMenuItemActionPerformed
-
-  private void routeVehiclesMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_routeVehiclesMenuItemActionPerformed
-  {//GEN-HEADEREND:event_routeVehiclesMenuItemActionPerformed
-    start(routeVehiclesTool);
-  }//GEN-LAST:event_routeVehiclesMenuItemActionPerformed
 
   private void reverseEdgeMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_reverseEdgeMenuItemActionPerformed
   {//GEN-HEADEREND:event_reverseEdgeMenuItemActionPerformed
@@ -917,6 +870,28 @@ public class TrafficSimulator extends javax.swing.JFrame
   {//GEN-HEADEREND:event_windowClosing
     exit();
   }//GEN-LAST:event_windowClosing
+
+  private void snapToGridMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_snapToGridMenuItemActionPerformed
+  {//GEN-HEADEREND:event_snapToGridMenuItemActionPerformed
+    String title = getMessage("dialog.snapToGrid.title");
+    String gridSizeLabel = getMessage("dialog.snapToGrid.gridSize");
+    Object value = JOptionPane.showInputDialog(this, gridSizeLabel, title,
+      JOptionPane.QUESTION_MESSAGE, null, null, "0.1");
+    try
+    {
+      if (value instanceof String)
+      {
+        Double gridSize = Double.parseDouble((String)value);
+        simulation.getRoadGraph().snapToGrid(gridSize);
+        mapViewer.repaint();
+      }
+    }
+    catch (Exception ex)
+    {
+      JOptionPane.showMessageDialog(this, ex.toString(), title,
+        JOptionPane.ERROR_MESSAGE);
+    }
+  }//GEN-LAST:event_snapToGridMenuItemActionPerformed
 
   /**
    * @param args the command line arguments
@@ -1019,10 +994,11 @@ public class TrafficSimulator extends javax.swing.JFrame
   private javax.swing.JMenuItem drawEdgeMenuItem;
   private javax.swing.JMenuItem drawLocationMenuItem;
   private javax.swing.JMenuItem drawVehicleGroupMenuItem;
-  private javax.swing.JMenu edgeMenu;
   private javax.swing.JCheckBoxMenuItem edgesCheckBoxMenuItem;
+  private javax.swing.JMenu edgesMenu;
   private javax.swing.JMenu editMenu;
   private javax.swing.JPopupMenu.Separator editSeparator1;
+  private javax.swing.JMenuItem editVerticesMenuItem;
   private javax.swing.JMenuItem exitMenuItem;
   private javax.swing.JMenuItem exportMenuItem;
   private javax.swing.JMenu fileMenu;
@@ -1036,6 +1012,7 @@ public class TrafficSimulator extends javax.swing.JFrame
   private javax.swing.JCheckBoxMenuItem locationsCheckBoxMenuItem;
   private org.santfeliu.trafsim.MapViewer mapViewer;
   private javax.swing.JMenuBar menuBar;
+  private javax.swing.JMenuItem moveMenuItem;
   private javax.swing.JMenuItem newMenuItem;
   private javax.swing.JCheckBoxMenuItem nodesCheckBoxMenuItem;
   private javax.swing.JMenuItem openFileMenuItem;
@@ -1046,6 +1023,7 @@ public class TrafficSimulator extends javax.swing.JFrame
   private javax.swing.JMenuItem saveMenuItem;
   private javax.swing.JMenuItem selectMenuItem;
   private javax.swing.JMenuItem simulationPropsMenuItem;
+  private javax.swing.JMenuItem snapToGridMenuItem;
   private javax.swing.JPanel statusPanel;
   private javax.swing.JLabel toolInfoLabel;
   private javax.swing.JLabel toolNameLabel;

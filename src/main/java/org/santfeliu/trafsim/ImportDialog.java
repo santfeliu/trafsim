@@ -41,7 +41,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Map;
 import javax.swing.JFileChooser;
-import org.santfeliu.trafsim.RoadGraph.Edge;
 import org.santfeliu.trafsim.io.GMLReader.Processor;
 
 /**
@@ -50,10 +49,8 @@ import org.santfeliu.trafsim.io.GMLReader.Processor;
  */
 public class ImportDialog extends javax.swing.JDialog
 {
-  private ArrayList<Edge> edges;
-  private ArrayList<VehicleGroup> vehicles;
-  private ArrayList<Location> locations;
-  private GenericLayer baseLayer;
+  private ArrayList<Feature> features;
+  private GenericLayer layer;
   private int locationSequence = 0;
   private static String wfsUrl;
   private static String wfsUsername;
@@ -403,13 +400,6 @@ public class ImportDialog extends javax.swing.JDialog
 
     countTextField.setText("LANES");
     countTextField.setPreferredSize(new java.awt.Dimension(140, 26));
-    countTextField.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        countTextFieldActionPerformed(evt);
-      }
-    });
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 1;
     gridBagConstraints.gridy = 2;
@@ -543,15 +533,12 @@ public class ImportDialog extends javax.swing.JDialog
     try
     {
       Processor processor = null;
-      edges = null;
-      locations = null;
-      vehicles = null;
-      baseLayer = null;
+      features = new ArrayList<Feature>();
+      layer = null;
 
       String as = (String)toComboBox.getSelectedItem();
       if ("Graph".equals(as))
       {
-        edges = new ArrayList<Edge>();
         processor = (Geometry geometry, Map attributes) ->
         {
           if (geometry instanceof LineString)
@@ -580,15 +567,13 @@ public class ImportDialog extends javax.swing.JDialog
               {
               }
             }
-            RoadGraph roadGraph = simulation.getRoadGraph();
-            Edge edge = roadGraph.newEdge((LineString)geometry, speed, lanes);
-            edges.add(edge);
+            features.add(simulation.getRoadGraph().newEdge(
+              (LineString)geometry, speed, lanes));
           }
         };
       }
       else if ("Locations".equals(as))
       {
-        locations = new ArrayList<Location>();
         processor = (Geometry geometry, Map attributes) ->
         {
           String locationName = "loc_" + locationSequence;
@@ -606,14 +591,13 @@ public class ImportDialog extends javax.swing.JDialog
             {
               locationLabel = value.toString();
             }
-            locations.add(new Location(locationName, locationLabel,
-              (Point)geometry, false));
+            features.add(simulation.getLocations().newLocation(
+              locationName, locationLabel, (Point)geometry, false));
           }
         };
       }
       else if ("Vehicles".equals(as))
       {
-        vehicles = new ArrayList<VehicleGroup>();
         processor = (Geometry geometry, Map attributes) ->
         {
           if (geometry instanceof Point)
@@ -636,20 +620,20 @@ public class ImportDialog extends javax.swing.JDialog
             {
               groupName = value.toString();
             }
-            vehicles.add(new VehicleGroup((Point)geometry,
-              numVehicles, groupName));
+            features.add(simulation.getVehicles().newVehicleGroup(
+              (Point)geometry, numVehicles, groupName));
           }
         };
       }
       else if ("Layer".equals(as))
       {
-        baseLayer = new GenericLayer(layerLabelTextField.getText(),
+        layer = new GenericLayer(layerLabelTextField.getText(),
           Color.LIGHT_GRAY);
         processor = (Geometry geometry, Map attributes) ->
         {
           if (geometry != null)
           {
-            baseLayer.add(new GenericEntity(geometry));
+            features.add(layer.newFeature(geometry));
           }
         };
       }
@@ -673,24 +657,16 @@ public class ImportDialog extends javax.swing.JDialog
       }
 
       TrafficSimulator trafficSimulator = (TrafficSimulator)getParent();
-      if (edges != null)
+      if (features.size() > 0)
       {
-        simulation.getRoadGraph().addAll(edges);
-        trafficSimulator.setModified(true);
-      }
-      else if (vehicles != null)
-      {
-        simulation.getVehicles().addAll(vehicles);
-        trafficSimulator.setModified(true);
-      }
-      else if (locations != null)
-      {
-        simulation.getLocations().addAll(locations);
-        trafficSimulator.setModified(true);
-      }
-      else if (baseLayer != null)
-      {
-        simulation.addGenericLayer(baseLayer);
+        if (layer != null)
+        {
+          simulation.addGenericLayer(layer);
+        }
+        for (Feature feature : features)
+        {
+          feature.add();
+        }
         trafficSimulator.setModified(true);
       }
       simulator.getMapViewer().repaint();
@@ -703,11 +679,6 @@ public class ImportDialog extends javax.swing.JDialog
       simulator.showError(this, "Import", ex);
     }
   }//GEN-LAST:event_importButtonActionPerformed
-
-  private void countTextFieldActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_countTextFieldActionPerformed
-  {//GEN-HEADEREND:event_countTextFieldActionPerformed
-    // TODO add your handling code here:
-  }//GEN-LAST:event_countTextFieldActionPerformed
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JButton cancelButton;

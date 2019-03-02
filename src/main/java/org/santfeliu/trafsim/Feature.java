@@ -31,6 +31,7 @@
 package org.santfeliu.trafsim;
 
 import java.util.Map;
+import javax.vecmath.Matrix4d;
 import org.santfeliu.trafsim.geom.Geometry;
 
 /**
@@ -39,7 +40,22 @@ import org.santfeliu.trafsim.geom.Geometry;
  */
 public abstract class Feature
 {
+  public abstract Layer getLayer();
+
+  public abstract void add();
+
+  public abstract void remove();
+  
+  public abstract boolean isRemoved();
+
   public abstract Geometry getGeometry();
+
+  public abstract void setGeometry(Geometry geometry);
+
+  public void transform(Matrix4d matrix)
+  {
+    getGeometry().transform(matrix);
+  }
 
   public void loadAttributes(Map attributes)
   {

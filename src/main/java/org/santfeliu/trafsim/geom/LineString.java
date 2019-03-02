@@ -32,6 +32,7 @@ package org.santfeliu.trafsim.geom;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
 import org.santfeliu.trafsim.Box;
 
@@ -42,7 +43,6 @@ import org.santfeliu.trafsim.Box;
 public class LineString extends Geometry
 {
   private final List<Point3d> vertices = new ArrayList<Point3d>();
-  private Box boundingBox;
 
   public LineString(List<Point3d> points)
   {
@@ -85,16 +85,21 @@ public class LineString extends Geometry
   }
 
   @Override
-  public Box getBoundingBox()
+  public void transform(Matrix4d matrix)
   {
-    if (boundingBox == null)
+    for (Point3d vertex : vertices)
     {
-      boundingBox = new Box();
-      for (Point3d vertex : vertices)
-      {
-        boundingBox.extend(vertex);
-      }
+      matrix.transform(vertex);
     }
-    return boundingBox;
+    updateBoundingBox();
+  }
+
+  @Override
+  protected void extend(Box box)
+  {
+    for (Point3d vertex : vertices)
+    {
+      box.extend(vertex);
+    }
   }
 }

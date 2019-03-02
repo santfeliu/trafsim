@@ -31,6 +31,7 @@
 package org.santfeliu.trafsim;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import javax.vecmath.Point3d;
@@ -60,10 +61,11 @@ public class RouteFinder
   public void setOrigin(Point3d origin, double tolerance)
   {
     startPick.clear();
-    if (Finder.findByPoint(roadGraph, origin, tolerance, startPick))
+    Collection<? extends Feature> features = roadGraph.getFeatures();
+    if (Finder.findByPoint(features, origin, tolerance, startPick))
     {
       Edge startEdge = (Edge)startPick.getFeature();
-      findRoutesFrom(startEdge.getTarget());
+      findRoutesFrom(startEdge.getTargetNode());
     }
   }
 
@@ -77,11 +79,12 @@ public class RouteFinder
   {
     destinationNode = null;
     endPick.clear();
-    if (Finder.findByPoint(roadGraph, destination, tolerance, endPick))
+    Collection<? extends Feature> features = roadGraph.getFeatures();
+    if (Finder.findByPoint(features, destination, tolerance, endPick))
     {
       Edge endEdge = (Edge)endPick.feature;
-      destinationNode = endEdge.getSource();
-    }    
+      destinationNode = endEdge.getSourceNode();
+    }
   }
 
   public void setDestination(Node destinationNode)
@@ -89,7 +92,7 @@ public class RouteFinder
     endPick.clear();
     this.destinationNode = destinationNode;
   }
-  
+
   public void clear()
   {
     startPick.clear();
@@ -97,35 +100,35 @@ public class RouteFinder
     originNode = null;
     destinationNode = null;
   }
-  
+
   public Route getRoute()
   {
     if (originNode == null || destinationNode == null) return null;
-    
+
     Route route = new Route();
-    
+
     NodeInfo nodeInfo = infos.get(destinationNode);
     if (isRouteInFirstEdge() && isForwardRoute())
     {
       Edge edge = (Edge)startPick.getFeature();
-      route.addSection(edge, 
-        startPick.getOnFeaturePoint(), 
-        startPick.getEdgeSegmentIndex(), 
-        endPick.getOnFeaturePoint(), 
-        endPick.getEdgeSegmentIndex());
+      route.addSection(edge,
+        startPick.getOnFeaturePoint(),
+        startPick.getIndex(),
+        endPick.getOnFeaturePoint(),
+        endPick.getIndex());
     }
     else if (nodeInfo.minTime < Double.POSITIVE_INFINITY)
     {
       if (startPick.getFeature() != null)
       {
-        route.addInitialSection((Edge)startPick.getFeature(), 
-          startPick.getOnFeaturePoint(), startPick.getEdgeSegmentIndex());
+        route.addInitialSection((Edge)startPick.getFeature(),
+          startPick.getOnFeaturePoint(), startPick.getIndex());
       }
       List<Edge> reversedEdges = new ArrayList<Edge>();
       while (nodeInfo.previous != null)
       {
         reversedEdges.add(nodeInfo.previous);
-        nodeInfo = infos.get(nodeInfo.previous.getSource());
+        nodeInfo = infos.get(nodeInfo.previous.getSourceNode());
       }
       for (int i = reversedEdges.size() - 1; i >= 0; i--)
       {
@@ -133,13 +136,13 @@ public class RouteFinder
       }
       if (endPick.getFeature() != null)
       {
-        route.addEndingSection((Edge)endPick.getFeature(), 
-          endPick.getOnFeaturePoint(), endPick.getEdgeSegmentIndex());
+        route.addEndingSection((Edge)endPick.getFeature(),
+          endPick.getOnFeaturePoint(), endPick.getIndex());
       }
     }
     return route;
   }
-  
+
   public Node getOriginNode()
   {
     return originNode;
@@ -149,7 +152,7 @@ public class RouteFinder
   {
     return destinationNode;
   }
-  
+
   public Point3d getOrigin()
   {
     if (startPick.getFeature() != null)
@@ -196,7 +199,7 @@ public class RouteFinder
 
       for (Edge edge : node.outEdges)
       {
-        Node nextNode = edge.target;
+        Node nextNode = edge.targetNode;
         NodeInfo nextNodeInfo = infos.get(nextNode);
 
         double time = nodeInfo.minTime + routeMeter.getTime(edge);
@@ -216,25 +219,25 @@ public class RouteFinder
     Edge endEdge = (Edge)endPick.getFeature();
     return startEdge == endEdge && startEdge != null;
   }
-  
+
   protected boolean isForwardRoute()
   {
     // assume route in first edge
-    if (startPick.getEdgeSegmentIndex() < endPick.getEdgeSegmentIndex())
+    if (startPick.getIndex() < endPick.getIndex())
       return true;
-    
-    if (startPick.getEdgeSegmentIndex() == endPick.getEdgeSegmentIndex())
+
+    if (startPick.getIndex() == endPick.getIndex())
     {
       Edge startEdge = (Edge)startPick.getFeature();
       List<Point3d> vertices = startEdge.getLineString().getVertices();
-      Point3d startPoint = vertices.get(startPick.getEdgeSegmentIndex());
+      Point3d startPoint = vertices.get(startPick.getIndex());
       Point3d p1 = startPick.getOnFeaturePoint();
       Point3d p2 = endPick.getOnFeaturePoint();
-      return startPoint.distance(p1) < startPoint.distance(p2);        
+      return startPoint.distance(p1) < startPoint.distance(p2);
     }
-    return false;    
+    return false;
   }
-  
+
   protected class NodeInfo
   {
     Node node;

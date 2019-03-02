@@ -42,7 +42,7 @@ import javax.vecmath.Point3d;
     Point3d worldPoint = new Point3d();
     Point3d onFeaturePoint = new Point3d();
     double distance = Double.POSITIVE_INFINITY;
-    int edgeSegmentIndex = -1;
+    int index = -1;
 
     public Feature getFeature()
     {
@@ -64,15 +64,19 @@ import javax.vecmath.Point3d;
       return distance;
     }
 
-    public int getEdgeSegmentIndex()
+    /**
+     * Gets the lower index of onFeaturePoint in the feature geometry
+     * @return the onFeaturePoint index or -1 feature is undefined
+     */
+    public int getIndex()
     {
-      return edgeSegmentIndex;
+      return index;
     }
-
+    
     public void clear()
     {
       feature = null;
-      edgeSegmentIndex = -1;
+      index = -1;
       distance = Double.POSITIVE_INFINITY;
     }
   }

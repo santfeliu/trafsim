@@ -60,7 +60,7 @@ public class FindRouteTool extends Tool implements MouseListener, Painter
   private RouteFinder routeFinder;
   private Route route;
   private double routeTime;
-  private java.awt.Point dp = new java.awt.Point();
+  private final java.awt.Point dp = new java.awt.Point();
 
   public FindRouteTool(TrafficSimulator trafficSimulator)
   {
@@ -80,7 +80,7 @@ public class FindRouteTool extends Tool implements MouseListener, Painter
     MapViewer mapViewer = getMapViewer();
     mapViewer.addMouseListener(this);
     mapViewer.setPainter(this);
-    info("findRouteTool.origin");
+    info("origin");
   }
 
   @Override
@@ -126,7 +126,7 @@ public class FindRouteTool extends Tool implements MouseListener, Painter
         routeTime = routeMeter.getTime(route);
       }
       mapViewer.repaint();
-      info("findRouteTool.destination");
+      info("destination");
     }
   }
 

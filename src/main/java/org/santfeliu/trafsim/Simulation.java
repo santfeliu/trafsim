@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -136,18 +135,6 @@ public class Simulation
     {
       layers.remove(layers.size() - 1);
     }
-  }
-  
-  public boolean remove(Feature feature)
-  {
-    boolean removed = false;
-    Iterator<Layer> iter = layers.iterator();
-    while (iter.hasNext() && !removed)
-    {
-      Layer layer = iter.next();
-      removed = layer.remove(feature);
-    }
-    return removed;
   }
   
   public Box getBoundingBox(Box box)

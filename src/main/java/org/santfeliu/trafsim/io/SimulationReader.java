@@ -34,19 +34,16 @@ import java.awt.Color;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Map;
 import javax.vecmath.Point3d;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.santfeliu.trafsim.GenericLayer;
-import org.santfeliu.trafsim.GenericEntity;
 import org.santfeliu.trafsim.Group;
-import org.santfeliu.trafsim.Location;
+import org.santfeliu.trafsim.Locations;
 import org.santfeliu.trafsim.RoadGraph;
-import org.santfeliu.trafsim.RoadGraph.Edge;
 import org.santfeliu.trafsim.Simulation;
-import org.santfeliu.trafsim.VehicleGroup;
+import org.santfeliu.trafsim.Vehicles;
 import org.santfeliu.trafsim.geom.LineString;
 import org.santfeliu.trafsim.geom.Point;
 import org.santfeliu.trafsim.geom.Polygon;
@@ -96,8 +93,7 @@ public class SimulationReader
           LineString lineString = getLineString(lineStringElement);
           int speed = getInteger(edgeElement, "speed", 50);
           int lanes = getInteger(edgeElement, "lanes", 1);
-          Edge edge = roadGraph.newEdge(lineString, speed, lanes);
-          roadGraph.add(edge);
+          roadGraph.newEdge(lineString, speed, lanes).add();
         }
       }
 
@@ -118,15 +114,15 @@ public class SimulationReader
             String geomType = geomElem.getNodeName();
             if ("point".equals(geomType))
             {
-              layer.add(new GenericEntity(getPoint(geomElem)));
+              layer.newFeature(getPoint(geomElem)).add();
             }
             else if ("line-string".equals(geomType))
             {
-              layer.add(new GenericEntity(getLineString(geomElem)));
+              layer.newFeature(getLineString(geomElem)).add();
             }
             else if ("polygon".equals(geomType))
             {
-              layer.add(new GenericEntity(getPolygon(geomElem)));
+              layer.newFeature(getPolygon(geomElem)).add();
             }
           }
         }
@@ -160,7 +156,7 @@ public class SimulationReader
       Element locationsElement = getElement(root, "locations");
       if (locationsElement != null)
       {
-        Collection<Location> locations = simulation.getLocations().getFeatures();
+        Locations locations = simulation.getLocations();
         NodeList locationList =
           locationsElement.getElementsByTagName("location");
         for (int i = 0; i < locationList.getLength(); i++)
@@ -171,9 +167,8 @@ public class SimulationReader
           String name = getString(locationElement, "name");
           String label = getString(locationElement, "label");
           String origin = getString(locationElement, "origin");
-          Location location = new Location(name, label, point,
-            "true".equals(origin));
-          locations.add(location);
+          boolean isOrigin = "true".equals(origin);
+          locations.newLocation(name, label, point, isOrigin).add();
         }
       }
 
@@ -181,8 +176,7 @@ public class SimulationReader
       Element vehiclesElement = getElement(root, "vehicles");
       if (vehiclesElement != null)
       {
-        Collection<VehicleGroup> vehicles =
-          simulation.getVehicles().getFeatures();
+        Vehicles vehicles = simulation.getVehicles();
         NodeList vehicleList =
           vehiclesElement.getElementsByTagName("vehicle-group");
         for (int i = 0; i < vehicleList.getLength(); i++)
@@ -192,8 +186,7 @@ public class SimulationReader
           Point point = getPoint(pointElement);
           int count = getInteger(vehicleElement, "count", 1);
           String group = getString(vehicleElement, "group");
-          VehicleGroup vehicleGroup = new VehicleGroup(point, count, group);
-          vehicles.add(vehicleGroup);
+          vehicles.newVehicleGroup(point, count, group).add();
         }
       }
     }

@@ -31,32 +31,34 @@
 package org.santfeliu.trafsim.tool;
 
 import java.awt.Color;
-import java.awt.Cursor;
 import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.util.ArrayList;
+import java.util.List;
+import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
-import org.santfeliu.trafsim.EdgeDialog;
+import javax.vecmath.Vector3d;
+import org.santfeliu.trafsim.Feature;
 import org.santfeliu.trafsim.MapViewer;
-import org.santfeliu.trafsim.MapViewer.Painter;
+import org.santfeliu.trafsim.MapViewer.Selection;
 import org.santfeliu.trafsim.Projector;
-import org.santfeliu.trafsim.RoadGraph;
 import org.santfeliu.trafsim.TrafficSimulator;
+import org.santfeliu.trafsim.geom.Geometry;
 import org.santfeliu.trafsim.geom.LineString;
+import org.santfeliu.trafsim.geom.Point;
 
 /**
  *
  * @author realor
  */
-public class DrawEdgeTool extends Tool
-  implements MouseListener, MouseMotionListener, Painter
+public class MoveTool extends Tool implements
+  MouseListener, MouseMotionListener, MapViewer.Painter
 {
-  private ArrayList<Point3d> vertices;
-  private boolean onNode;
+  private Point3d origin;
+  private Point3d destination;
 
-  public DrawEdgeTool(TrafficSimulator trafficSimulator)
+  public MoveTool(TrafficSimulator trafficSimulator)
   {
     super(trafficSimulator);
   }
@@ -64,20 +66,16 @@ public class DrawEdgeTool extends Tool
   @Override
   public String getName()
   {
-    return "drawEdge";
+    return "move";
   }
 
   @Override
   public void start()
   {
-    vertices = new ArrayList<Point3d>();
-    vertices.add(new Point3d());
-
     MapViewer mapViewer = getMapViewer();
     mapViewer.addMouseListener(this);
     mapViewer.addMouseMotionListener(this);
     mapViewer.setPainter(this);
-    mapViewer.setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
     info("info");
   }
 
@@ -88,7 +86,8 @@ public class DrawEdgeTool extends Tool
     mapViewer.removeMouseListener(this);
     mapViewer.removeMouseMotionListener(this);
     mapViewer.setPainter(null);
-    mapViewer.setCursor(Cursor.getDefaultCursor());
+    origin = null;
+    destination = null;
   }
 
   @Override
@@ -99,58 +98,24 @@ public class DrawEdgeTool extends Tool
   @Override
   public void mousePressed(MouseEvent e)
   {
-    MapViewer mapViewer = getMapViewer();
-
     if (e.getButton() == MouseEvent.BUTTON1)
     {
-      if (e.getClickCount() == 1 && (!onNode || vertices.size() == 1))
-      {
-        // add new vertex
-        Point3d world = new Point3d();
-        onNode = snapNode(e.getPoint(), world);
-        vertices.add(world);
-      }
-      else
-      {
-        // close by doble-click or onNode
-        if (e.getClickCount() > 1)
-        {
-          vertices.remove(vertices.size() - 1);
-        }
-        if (vertices.size() > 1)
-        {
-          EdgeDialog dialog = new EdgeDialog(null, true);
-          dialog.setSpeed(50);
-          dialog.setLanes(1);
-          if (dialog.showDialog())
-          {
-            RoadGraph roadGraph = mapViewer.getSimulation().getRoadGraph();
-            roadGraph.newEdge(new LineString(vertices),
-              dialog.getSpeed(), dialog.getLanes()).add();
-            trafficSimulator.setModified(true);
-          }
-          vertices = new ArrayList<Point3d>();
-          vertices.add(new Point3d());
-          onNode = false;
-          mapViewer.repaint();
-        }
-      }
-    }
-    else
-    {
-      if (vertices.size() > 1)
-      {
-        vertices.remove(vertices.size() - 1);
-        Point3d world = vertices.get(vertices.size() - 1);
-        onNode = snapNode(e.getPoint(), world);
-        mapViewer.repaint();
-      }
+      Projector projector = getMapViewer().getProjector();
+      origin = new Point3d();
+      projector.unproject(e.getPoint(), origin);
     }
   }
 
   @Override
   public void mouseReleased(MouseEvent e)
   {
+    if (origin != null && destination != null)
+    {
+      moveSelection();
+      getMapViewer().repaint();
+    }
+    origin = null;
+    destination = null;
   }
 
   @Override
@@ -166,37 +131,74 @@ public class DrawEdgeTool extends Tool
   @Override
   public void mouseDragged(MouseEvent e)
   {
+    Projector projector = getMapViewer().getProjector();
+    destination = new Point3d();
+    projector.unproject(e.getPoint(), destination);
+    getMapViewer().repaint();
   }
 
   @Override
   public void mouseMoved(MouseEvent e)
   {
-    Point3d world = vertices.get(vertices.size() - 1);
-    onNode = snapNode(e.getPoint(), world);
-    getMapViewer().repaint();
   }
 
   @Override
   public void paint(MapViewer mapViewer, Graphics2D g)
   {
-    g.setColor(Color.MAGENTA);
-    Projector projector = mapViewer.getProjector();
+    if (origin == null || destination == null) return;
+
+    Point3d moved1 = new Point3d();
+    Point3d moved2 = new Point3d();
     java.awt.Point dp1 = new java.awt.Point();
     java.awt.Point dp2 = new java.awt.Point();
-    for (int i = 0; i < vertices.size() - 1; i++)
+    Projector projector = getProjector();
+    Vector3d move = new Vector3d();
+    move.sub(destination, origin);
+
+    g.setColor(Color.BLUE);
+
+    Selection selection = mapViewer.getSelection();
+    for (Feature feature : selection)
     {
-      Point3d pt1 = vertices.get(i);
-      Point3d pt2 = vertices.get(i + 1);
-      projector.project(pt1, dp1);
-      projector.project(pt2, dp2);
-      g.drawLine(dp1.x, dp1.y, dp2.x, dp2.y);
+      Geometry geometry = feature.getGeometry();
+      if (geometry instanceof Point)
+      {
+        Point point = (Point)geometry;
+        moved1.set(point.getPosition());
+        moved1.add(move);
+        projector.project(moved1, dp1);
+        g.drawOval(dp1.x - 1, dp1.y - 1 , 3, 3);
+      }
+      else if (geometry instanceof LineString)
+      {
+        LineString lineString = (LineString)geometry;
+        List<Point3d> vertices = lineString.getVertices();
+        for (int i = 0; i < vertices.size() - 1; i++)
+        {
+          moved1.set(vertices.get(i));
+          moved2.set(vertices.get(i + 1));
+          moved1.add(move);
+          moved2.add(move);
+          projector.project(moved1, dp1);
+          projector.project(moved2, dp2);
+          g.drawLine(dp1.x, dp1.y, dp2.x, dp2.y);
+        }
+      }
     }
-    if (onNode)
+  }
+
+  private void moveSelection()
+  {
+    Vector3d move = new Vector3d();
+    move.sub(destination, origin);
+    Matrix4d matrix = new Matrix4d();
+    matrix.setIdentity();
+    matrix.setTranslation(move);
+
+    Selection selection = getMapViewer().getSelection();
+    for (Feature feature : selection)
     {
-      g.setColor(Color.BLACK);
-      Point3d pt = vertices.get(vertices.size() - 1);
-      projector.project(pt, dp1);
-      g.drawOval(dp1.x - 4, dp1.y - 4, 8, 8);
+      feature.transform(matrix);
     }
   }
 }

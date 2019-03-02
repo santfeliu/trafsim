@@ -36,14 +36,14 @@ import java.util.Collection;
 import java.util.List;
 import javax.vecmath.Point3d;
 import org.santfeliu.trafsim.GenericLayer;
-import org.santfeliu.trafsim.GenericEntity;
+import org.santfeliu.trafsim.GenericLayer.GenericFeature;
 import org.santfeliu.trafsim.Group;
 import org.santfeliu.trafsim.Group.Journey;
-import org.santfeliu.trafsim.Location;
+import org.santfeliu.trafsim.Locations.Location;
 import org.santfeliu.trafsim.RoadGraph;
 import org.santfeliu.trafsim.RoadGraph.Edge;
 import org.santfeliu.trafsim.Simulation;
-import org.santfeliu.trafsim.VehicleGroup;
+import org.santfeliu.trafsim.Vehicles.VehicleGroup;
 import org.santfeliu.trafsim.geom.Geometry;
 import org.santfeliu.trafsim.geom.LineString;
 import org.santfeliu.trafsim.geom.Point;
@@ -161,8 +161,8 @@ public class SimulationWriter extends XMLWriter
     startTag("layer");
     writeAttribute("label", layer.getLabel());
 
-    Collection<GenericEntity> features = layer.getFeatures();
-    for (GenericEntity feature : features)
+    Collection<GenericFeature> features = layer.getFeatures();
+    for (GenericFeature feature : features)
     {
       writeGeometry(feature.getGeometry());
     }

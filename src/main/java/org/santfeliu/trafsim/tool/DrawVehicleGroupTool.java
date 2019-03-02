@@ -35,8 +35,8 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import javax.vecmath.Point3d;
 import org.santfeliu.trafsim.MapViewer;
+import org.santfeliu.trafsim.Simulation;
 import org.santfeliu.trafsim.TrafficSimulator;
-import org.santfeliu.trafsim.VehicleGroup;
 import org.santfeliu.trafsim.VehicleGroupDialog;
 import org.santfeliu.trafsim.geom.Point;
 
@@ -63,7 +63,7 @@ public class DrawVehicleGroupTool extends Tool implements MouseListener
     MapViewer mapViewer = getMapViewer();
     mapViewer.addMouseListener(this);
     mapViewer.setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
-    info("drawVehicleGroupTool.info");
+    info("info");
   }
 
   @Override
@@ -83,15 +83,15 @@ public class DrawVehicleGroupTool extends Tool implements MouseListener
   public void mousePressed(MouseEvent e)
   {
     MapViewer mapViewer = getMapViewer();
+    Simulation simulation = mapViewer.getSimulation();
     java.awt.Point dp = e.getPoint();
     Point3d world = new Point3d();
     mapViewer.getProjector().unproject(dp, world);
     VehicleGroupDialog dialog = new VehicleGroupDialog(null, true);
     if (dialog.showDialog())
     {
-      VehicleGroup vehicleGroup = new VehicleGroup(new Point(world),
-        dialog.getCount(), dialog.getGroup());
-      mapViewer.getSimulation().getVehicles().getFeatures().add(vehicleGroup);
+      simulation.getVehicles().newVehicleGroup(new Point(world),
+        dialog.getCount(), dialog.getGroup()).add();
       mapViewer.repaint();
       trafficSimulator.setModified(true);
     }
