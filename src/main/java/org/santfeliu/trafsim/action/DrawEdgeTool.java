@@ -28,7 +28,7 @@
  *   and
  *   https://www.gnu.org/licenses/lgpl.txt
  */
-package org.santfeliu.trafsim.tool;
+package org.santfeliu.trafsim.action;
 
 import java.awt.Color;
 import java.awt.Cursor;
@@ -37,12 +37,15 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
+import javax.swing.undo.CannotRedoException;
+import javax.swing.undo.CannotUndoException;
 import javax.vecmath.Point3d;
 import org.santfeliu.trafsim.EdgeDialog;
 import org.santfeliu.trafsim.MapViewer;
 import org.santfeliu.trafsim.MapViewer.Painter;
 import org.santfeliu.trafsim.Projector;
 import org.santfeliu.trafsim.RoadGraph;
+import org.santfeliu.trafsim.RoadGraph.Edge;
 import org.santfeliu.trafsim.TrafficSimulator;
 import org.santfeliu.trafsim.geom.LineString;
 
@@ -64,7 +67,7 @@ public class DrawEdgeTool extends Tool
   @Override
   public String getName()
   {
-    return "drawEdge";
+    return "drawEdgeTool";
   }
 
   @Override
@@ -125,9 +128,11 @@ public class DrawEdgeTool extends Tool
           if (dialog.showDialog())
           {
             RoadGraph roadGraph = mapViewer.getSimulation().getRoadGraph();
-            roadGraph.newEdge(new LineString(vertices),
-              dialog.getSpeed(), dialog.getLanes()).add();
+            Edge edge = roadGraph.newEdge(new LineString(vertices),
+              dialog.getSpeed(), dialog.getLanes());
+            edge.add();
             trafficSimulator.setModified(true);
+            getUndoManager().addEdit(new Undo(edge));
           }
           vertices = new ArrayList<Point3d>();
           vertices.add(new Point3d());
@@ -197,6 +202,33 @@ public class DrawEdgeTool extends Tool
       Point3d pt = vertices.get(vertices.size() - 1);
       projector.project(pt, dp1);
       g.drawOval(dp1.x - 4, dp1.y - 4, 8, 8);
+    }
+  }
+
+  public class Undo extends BasicUndoableEdit
+  {
+    private final Edge edge;
+
+    private Undo(Edge edge)
+    {
+      this.edge = edge;
+    }
+
+    @Override
+    public void undo() throws CannotUndoException
+    {
+      edge.remove();
+      getSelection().remove(edge);
+      trafficSimulator.setModified(true);
+      getMapViewer().repaint();
+    }
+
+    @Override
+    public void redo() throws CannotRedoException
+    {
+      edge.add();
+      trafficSimulator.setModified(true);
+      getMapViewer().repaint();
     }
   }
 }

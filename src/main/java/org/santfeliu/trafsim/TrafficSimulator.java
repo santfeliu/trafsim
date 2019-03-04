@@ -47,19 +47,23 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
-import org.santfeliu.trafsim.MapViewer.Selection;
-import org.santfeliu.trafsim.RoadGraph.Edge;
-import org.santfeliu.trafsim.tool.Tool;
-import org.santfeliu.trafsim.tool.DrawEdgeTool;
-import org.santfeliu.trafsim.tool.DrawLocationTool;
-import org.santfeliu.trafsim.tool.DrawVehicleGroupTool;
-import org.santfeliu.trafsim.tool.SelectTool;
+import javax.swing.undo.CannotRedoException;
+import javax.swing.undo.CannotUndoException;
+import javax.swing.undo.UndoManager;
+import javax.swing.undo.UndoableEdit;
+import org.santfeliu.trafsim.action.DeleteAction;
+import org.santfeliu.trafsim.action.Tool;
+import org.santfeliu.trafsim.action.DrawEdgeTool;
+import org.santfeliu.trafsim.action.DrawLocationTool;
+import org.santfeliu.trafsim.action.DrawVehicleGroupTool;
+import org.santfeliu.trafsim.action.SelectTool;
 import org.santfeliu.trafsim.io.SimulationReader;
 import org.santfeliu.trafsim.io.SimulationWriter;
-import org.santfeliu.trafsim.tool.EditVerticesTool;
-import org.santfeliu.trafsim.tool.FindRouteTool;
-import org.santfeliu.trafsim.tool.MoveTool;
-import org.santfeliu.trafsim.tool.RouteVehiclesTool;
+import org.santfeliu.trafsim.action.EditVerticesTool;
+import org.santfeliu.trafsim.action.FindRouteTool;
+import org.santfeliu.trafsim.action.MoveTool;
+import org.santfeliu.trafsim.action.ReverseEdgesAction;
+import org.santfeliu.trafsim.action.RouteVehiclesTool;
 
 /**
  *
@@ -72,6 +76,9 @@ public class TrafficSimulator extends javax.swing.JFrame
   public static final String FILE_EXTENSION = ".tfs";
   private Simulation simulation;
   private File lastFile;
+  private final ResourceBundle resourceBundle;
+  private final ReverseEdgesAction reverseEdgesAction;
+  private final DeleteAction deleteAction;
   private final SelectTool selectTool;
   private final MoveTool moveTool;
   private final EditVerticesTool editVerticesTool;
@@ -82,7 +89,7 @@ public class TrafficSimulator extends javax.swing.JFrame
   private final RouteVehiclesTool routeVehiclesTool;
   private Tool currentTool;
   private boolean modified;
-  private final ResourceBundle resourceBundle;
+  private final SimulatorUndoManager undoManager;
 
   /**
    * Creates new form TrafficSimulator
@@ -91,6 +98,8 @@ public class TrafficSimulator extends javax.swing.JFrame
   {
     resourceBundle = ResourceBundle.getBundle(
       "org/santfeliu/trafsim/resources/TrafficSimulator");
+    reverseEdgesAction = new ReverseEdgesAction(this);
+    deleteAction = new DeleteAction(this);
     selectTool = new SelectTool(this);
     moveTool = new MoveTool(this);
     editVerticesTool = new EditVerticesTool(this);
@@ -101,6 +110,8 @@ public class TrafficSimulator extends javax.swing.JFrame
     routeVehiclesTool = new RouteVehiclesTool(this);
     initComponents();
     setFrameIcons();
+    undoManager = new SimulatorUndoManager();
+    undoManager.updateMenuItems();
     setSimulation(new Simulation());
     start(selectTool);
   }
@@ -115,6 +126,7 @@ public class TrafficSimulator extends javax.swing.JFrame
     if (simulation == null)
       throw new RuntimeException("Simulation can not be null");
     this.simulation = simulation;
+    mapViewer.getSelection().clear();
   }
 
   public boolean isModified()
@@ -124,13 +136,21 @@ public class TrafficSimulator extends javax.swing.JFrame
 
   public void setModified(boolean modified)
   {
-    this.modified = modified;
-    updateTitle();
+    if (this.modified != modified)
+    {
+      this.modified = modified;
+      updateTitle();
+    }
   }
 
   public MapViewer getMapViewer()
   {
     return mapViewer;
+  }
+
+  public UndoManager getUndoManager()
+  {
+    return undoManager;
   }
 
   public String getMessage(String message)
@@ -162,7 +182,7 @@ public class TrafficSimulator extends javax.swing.JFrame
     }
     currentTool = command;
     currentTool.start();
-    String key = currentTool.getName() + "Tool.name";
+    String key = currentTool.getName() + ".name";
     toolNameLabel.setText(getMessage(key) + ":");
   }
 
@@ -234,11 +254,14 @@ public class TrafficSimulator extends javax.swing.JFrame
     fileSeparator2 = new javax.swing.JPopupMenu.Separator();
     exitMenuItem = new javax.swing.JMenuItem();
     editMenu = new javax.swing.JMenu();
+    undoMenuItem = new javax.swing.JMenuItem();
+    redoMenuItem = new javax.swing.JMenuItem();
+    editSeparator1 = new javax.swing.JPopupMenu.Separator();
     deleteMenuItem = new javax.swing.JMenuItem();
     edgesMenu = new javax.swing.JMenu();
     reverseEdgeMenuItem = new javax.swing.JMenuItem();
     snapToGridMenuItem = new javax.swing.JMenuItem();
-    editSeparator1 = new javax.swing.JPopupMenu.Separator();
+    editSeparator2 = new javax.swing.JPopupMenu.Separator();
     groupsMenuItem = new javax.swing.JMenuItem();
     simulationPropsMenuItem = new javax.swing.JMenuItem();
     viewMenu = new javax.swing.JMenu();
@@ -375,28 +398,37 @@ public class TrafficSimulator extends javax.swing.JFrame
 
     editMenu.setText(bundle.getString("menu.edit")); // NOI18N
 
-    deleteMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_DELETE, 0));
-    deleteMenuItem.setText(bundle.getString("menu.delete")); // NOI18N
-    deleteMenuItem.addActionListener(new java.awt.event.ActionListener()
+    undoMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Z, java.awt.event.InputEvent.CTRL_MASK));
+    undoMenuItem.setText("Undo");
+    undoMenuItem.addActionListener(new java.awt.event.ActionListener()
     {
       public void actionPerformed(java.awt.event.ActionEvent evt)
       {
-        deleteMenuItemActionPerformed(evt);
+        undoMenuItemActionPerformed(evt);
       }
     });
+    editMenu.add(undoMenuItem);
+
+    redoMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Y, java.awt.event.InputEvent.CTRL_MASK));
+    redoMenuItem.setText("Redo");
+    redoMenuItem.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        redoMenuItemActionPerformed(evt);
+      }
+    });
+    editMenu.add(redoMenuItem);
+    editMenu.add(editSeparator1);
+
+    deleteMenuItem.setAction(deleteAction);
+    deleteMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_DELETE, 0));
     editMenu.add(deleteMenuItem);
 
     edgesMenu.setText(bundle.getString("menu.edges")); // NOI18N
 
-    reverseEdgeMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_I, java.awt.event.InputEvent.CTRL_MASK));
-    reverseEdgeMenuItem.setText(bundle.getString("menu.reverse")); // NOI18N
-    reverseEdgeMenuItem.addActionListener(new java.awt.event.ActionListener()
-    {
-      public void actionPerformed(java.awt.event.ActionEvent evt)
-      {
-        reverseEdgeMenuItemActionPerformed(evt);
-      }
-    });
+    reverseEdgeMenuItem.setAction(reverseEdgesAction);
+    reverseEdgeMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, java.awt.event.InputEvent.CTRL_MASK));
     edgesMenu.add(reverseEdgeMenuItem);
 
     snapToGridMenuItem.setText(bundle.getString("menu.snapToGrid")); // NOI18N
@@ -410,7 +442,7 @@ public class TrafficSimulator extends javax.swing.JFrame
     edgesMenu.add(snapToGridMenuItem);
 
     editMenu.add(edgesMenu);
-    editMenu.add(editSeparator1);
+    editMenu.add(editSeparator2);
 
     groupsMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_G, java.awt.event.InputEvent.CTRL_MASK));
     groupsMenuItem.setText(bundle.getString("menu.groups")); // NOI18N
@@ -562,29 +594,37 @@ public class TrafficSimulator extends javax.swing.JFrame
     toolsMenu.setText(bundle.getString("menu.tools")); // NOI18N
 
     selectMenuItem.setAction(selectTool);
+    selectMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, 0));
     toolsMenu.add(selectMenuItem);
 
     moveMenuItem.setAction(moveTool);
+    moveMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_M, 0));
     toolsMenu.add(moveMenuItem);
 
     editVerticesMenuItem.setAction(editVerticesTool);
+    editVerticesMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_D, 0));
     toolsMenu.add(editVerticesMenuItem);
     toolsMenu.add(toolsSeparator1);
 
     drawEdgeMenuItem.setAction(drawEdgeTool);
+    drawEdgeMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_E, 0));
     toolsMenu.add(drawEdgeMenuItem);
 
     drawLocationMenuItem.setAction(drawLocationTool);
+    drawLocationMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_L, 0));
     toolsMenu.add(drawLocationMenuItem);
 
     drawVehicleGroupMenuItem.setAction(drawVehicleGroupTool);
+    drawVehicleGroupMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_V, 0));
     toolsMenu.add(drawVehicleGroupMenuItem);
     toolsMenu.add(toolsSeparator2);
 
     findRouteMenuItem.setAction(findRouteTool);
+    findRouteMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, 0));
     toolsMenu.add(findRouteMenuItem);
 
     routeVehiclesMenuItem.setAction(routeVehiclesTool);
+    routeVehiclesMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, 0));
     toolsMenu.add(routeVehiclesMenuItem);
 
     menuBar.add(toolsMenu);
@@ -644,6 +684,7 @@ public class TrafficSimulator extends javax.swing.JFrame
         setCursor(Cursor.getDefaultCursor());
         start(selectTool);
         setModified(false);
+        undoManager.discardAllEdits();
       }
     }
     catch (Exception ex)
@@ -722,6 +763,7 @@ public class TrafficSimulator extends javax.swing.JFrame
     lastFile = null;
     start(selectTool);
     setModified(false);
+    undoManager.discardAllEdits();
   }//GEN-LAST:event_newMenuItemActionPerformed
 
   private void importMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_importMenuItemActionPerformed
@@ -755,17 +797,6 @@ public class TrafficSimulator extends javax.swing.JFrame
       }
     }
   }//GEN-LAST:event_saveMenuItemActionPerformed
-
-  private void deleteMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_deleteMenuItemActionPerformed
-  {//GEN-HEADEREND:event_deleteMenuItemActionPerformed
-    Selection selection = mapViewer.getSelection();
-    for (Feature feature : selection)
-    {
-      feature.remove();
-    }
-    selection.clear();
-    setModified(true);
-  }//GEN-LAST:event_deleteMenuItemActionPerformed
 
   private void edgesCheckBoxMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_edgesCheckBoxMenuItemActionPerformed
   {//GEN-HEADEREND:event_edgesCheckBoxMenuItemActionPerformed
@@ -824,21 +855,6 @@ public class TrafficSimulator extends javax.swing.JFrame
     }
   }//GEN-LAST:event_groupsMenuItemActionPerformed
 
-  private void reverseEdgeMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_reverseEdgeMenuItemActionPerformed
-  {//GEN-HEADEREND:event_reverseEdgeMenuItemActionPerformed
-    Selection selection = mapViewer.getSelection();
-    for (Feature feature : selection)
-    {
-      if (feature instanceof Edge)
-      {
-        Edge edge = (Edge)feature;
-        edge.reverse();
-      }
-    }
-    mapViewer.repaint();
-    setModified(true);
-  }//GEN-LAST:event_reverseEdgeMenuItemActionPerformed
-
   private void indicatorsCheckBoxMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_indicatorsCheckBoxMenuItemActionPerformed
   {//GEN-HEADEREND:event_indicatorsCheckBoxMenuItemActionPerformed
     mapViewer.setIndicatorsVisible(indicatorsCheckBoxMenuItem.isSelected());
@@ -892,6 +908,66 @@ public class TrafficSimulator extends javax.swing.JFrame
         JOptionPane.ERROR_MESSAGE);
     }
   }//GEN-LAST:event_snapToGridMenuItemActionPerformed
+
+  private void undoMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_undoMenuItemActionPerformed
+  {//GEN-HEADEREND:event_undoMenuItemActionPerformed
+    if (undoManager.canUndo())
+    {
+      undoManager.undo();
+    }
+  }//GEN-LAST:event_undoMenuItemActionPerformed
+
+  private void redoMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_redoMenuItemActionPerformed
+  {//GEN-HEADEREND:event_redoMenuItemActionPerformed
+    if (undoManager.canRedo())
+    {
+      undoManager.redo();
+    }
+  }//GEN-LAST:event_redoMenuItemActionPerformed
+
+  public class SimulatorUndoManager extends UndoManager
+  {
+    @Override
+    public synchronized boolean addEdit(UndoableEdit anEdit)
+    {
+      boolean added = super.addEdit(anEdit);
+      updateMenuItems();
+      return added;
+    }
+
+    @Override
+    public synchronized void redo() throws CannotRedoException
+    {
+      super.redo();
+      updateMenuItems();
+    }
+
+    @Override
+    public synchronized void undo() throws CannotUndoException
+    {
+      super.undo();
+      updateMenuItems();
+    }
+
+    @Override
+    public synchronized void discardAllEdits()
+    {
+      super.discardAllEdits();
+      updateMenuItems();
+    }
+
+    protected void updateMenuItems()
+    {
+      undoMenuItem.setEnabled(canUndo());
+      redoMenuItem.setEnabled(canRedo());
+
+      undoMenuItem.setText(canUndo() ?
+        getUndoPresentationName() : getMessage("menu.undo"));
+
+      redoMenuItem.setText(canRedo() ?
+        getRedoPresentationName() : getMessage("menu.redo"));
+    }
+  }
 
   /**
    * @param args the command line arguments
@@ -998,6 +1074,7 @@ public class TrafficSimulator extends javax.swing.JFrame
   private javax.swing.JMenu edgesMenu;
   private javax.swing.JMenu editMenu;
   private javax.swing.JPopupMenu.Separator editSeparator1;
+  private javax.swing.JPopupMenu.Separator editSeparator2;
   private javax.swing.JMenuItem editVerticesMenuItem;
   private javax.swing.JMenuItem exitMenuItem;
   private javax.swing.JMenuItem exportMenuItem;
@@ -1017,6 +1094,7 @@ public class TrafficSimulator extends javax.swing.JFrame
   private javax.swing.JCheckBoxMenuItem nodesCheckBoxMenuItem;
   private javax.swing.JMenuItem openFileMenuItem;
   private javax.swing.JCheckBoxMenuItem originsCheckBoxMenuItem;
+  private javax.swing.JMenuItem redoMenuItem;
   private javax.swing.JMenuItem reverseEdgeMenuItem;
   private javax.swing.JMenuItem routeVehiclesMenuItem;
   private javax.swing.JMenuItem saveAsMenuItem;
@@ -1030,6 +1108,7 @@ public class TrafficSimulator extends javax.swing.JFrame
   private javax.swing.JMenu toolsMenu;
   private javax.swing.JPopupMenu.Separator toolsSeparator1;
   private javax.swing.JPopupMenu.Separator toolsSeparator2;
+  private javax.swing.JMenuItem undoMenuItem;
   private javax.swing.JCheckBoxMenuItem vehiclesCheckBoxMenuItem;
   private javax.swing.JMenu viewMenu;
   private javax.swing.JPopupMenu.Separator viewSeparator1;

@@ -28,25 +28,28 @@
  *   and
  *   https://www.gnu.org/licenses/lgpl.txt
  */
-package org.santfeliu.trafsim.tool;
+package org.santfeliu.trafsim.action;
 
 import java.awt.Cursor;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import javax.swing.undo.CannotRedoException;
+import javax.swing.undo.CannotUndoException;
 import javax.vecmath.Point3d;
+import org.santfeliu.trafsim.LocationDialog;
+import org.santfeliu.trafsim.Locations.Location;
 import org.santfeliu.trafsim.MapViewer;
 import org.santfeliu.trafsim.Simulation;
 import org.santfeliu.trafsim.TrafficSimulator;
-import org.santfeliu.trafsim.VehicleGroupDialog;
 import org.santfeliu.trafsim.geom.Point;
 
 /**
  *
  * @author realor
  */
-public class DrawVehicleGroupTool extends Tool implements MouseListener
+public class DrawLocationTool extends Tool implements MouseListener
 {
-  public DrawVehicleGroupTool(TrafficSimulator trafficSimulator)
+  public DrawLocationTool(TrafficSimulator trafficSimulator)
   {
     super(trafficSimulator);
   }
@@ -54,7 +57,7 @@ public class DrawVehicleGroupTool extends Tool implements MouseListener
   @Override
   public String getName()
   {
-    return "drawVehicleGroup";
+    return "drawLocationTool";
   }
 
   @Override
@@ -87,13 +90,16 @@ public class DrawVehicleGroupTool extends Tool implements MouseListener
     java.awt.Point dp = e.getPoint();
     Point3d world = new Point3d();
     mapViewer.getProjector().unproject(dp, world);
-    VehicleGroupDialog dialog = new VehicleGroupDialog(null, true);
+    LocationDialog dialog = new LocationDialog(null, true);
     if (dialog.showDialog())
     {
-      simulation.getVehicles().newVehicleGroup(new Point(world),
-        dialog.getCount(), dialog.getGroup()).add();
+      Location location = simulation.getLocations().newLocation(
+        dialog.getLocationName(), dialog.getLocationLabel(),
+        new Point(world), dialog.isOrigin());
+      location.add();
       mapViewer.repaint();
       trafficSimulator.setModified(true);
+      getUndoManager().addEdit(new Undo(location));
     }
   }
 
@@ -110,5 +116,32 @@ public class DrawVehicleGroupTool extends Tool implements MouseListener
   @Override
   public void mouseExited(MouseEvent e)
   {
+  }
+
+  public class Undo extends BasicUndoableEdit
+  {
+    private final Location location;
+
+    private Undo(Location location)
+    {
+      this.location = location;
+    }
+
+    @Override
+    public void undo() throws CannotUndoException
+    {
+      location.remove();
+      getSelection().remove(location);
+      trafficSimulator.setModified(true);
+      getMapViewer().repaint();
+    }
+
+    @Override
+    public void redo() throws CannotRedoException
+    {
+      location.add();
+      trafficSimulator.setModified(true);
+      getMapViewer().repaint();
+    }
   }
 }

@@ -797,6 +797,7 @@ public class MapViewer extends javax.swing.JPanel
     {
       super.clear();
       addAll(features);
+      repaint();
     }
 
     public void invert(Feature feature)

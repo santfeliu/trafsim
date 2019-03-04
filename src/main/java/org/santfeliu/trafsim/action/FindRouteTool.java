@@ -28,7 +28,7 @@
  *   and
  *   https://www.gnu.org/licenses/lgpl.txt
  */
-package org.santfeliu.trafsim.tool;
+package org.santfeliu.trafsim.action;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -70,7 +70,7 @@ public class FindRouteTool extends Tool implements MouseListener, Painter
   @Override
   public String getName()
   {
-    return "findRoute";
+    return "findRouteTool";
   }
 
   @Override

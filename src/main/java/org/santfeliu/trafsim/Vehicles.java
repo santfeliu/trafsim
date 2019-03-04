@@ -73,7 +73,7 @@ public class Vehicles extends Layer<VehicleGroup>
     for (VehicleGroup vehicleGroup : features)
     {
       vehicleGroup.removed = true;
-    }    
+    }
     features.clear();
   }
 
@@ -163,11 +163,16 @@ public class Vehicles extends Layer<VehicleGroup>
         removed = true;
       }
     }
-    
+
     @Override
     public boolean isRemoved()
     {
       return removed;
+    }
+
+    public VehicleGroup duplicate()
+    {
+      return new VehicleGroup(point.duplicate(), count, group);
     }
 
     @Override

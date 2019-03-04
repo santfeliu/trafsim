@@ -66,6 +66,12 @@ public class Point extends Geometry
   }
 
   @Override
+  public Point duplicate()
+  {
+    return new Point(new Point3d(position));
+  }
+
+  @Override
   protected void extend(Box box)
   {
     box.extend(position);

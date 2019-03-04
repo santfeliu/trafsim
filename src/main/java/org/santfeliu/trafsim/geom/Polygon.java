@@ -42,10 +42,11 @@ import org.santfeliu.trafsim.Box;
  */
 public class Polygon extends Geometry
 {
-  private final List<Point3d> vertices = new ArrayList<Point3d>();
+  private final List<Point3d> vertices;
 
   public Polygon(List<Point3d> points)
   {
+    vertices = new ArrayList<Point3d>(points.size());
     this.vertices.addAll(points);
   }
 
@@ -92,6 +93,17 @@ public class Polygon extends Geometry
       matrix.transform(vertex);
     }
     updateBoundingBox();
+  }
+
+  @Override
+  public Polygon duplicate()
+  {
+    List<Point3d> dupVertices = new ArrayList<Point3d>();
+    for (Point3d vertex : vertices)
+    {
+      dupVertices.add(new Point3d(vertex));
+    }
+    return new Polygon(dupVertices);
   }
 
   @Override

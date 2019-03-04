@@ -28,22 +28,32 @@
  *   and
  *   https://www.gnu.org/licenses/lgpl.txt
  */
-package org.santfeliu.trafsim.tool;
+package org.santfeliu.trafsim.action;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import javax.swing.undo.CannotRedoException;
+import javax.swing.undo.CannotUndoException;
 import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 import org.santfeliu.trafsim.Feature;
+import org.santfeliu.trafsim.Finder;
+import org.santfeliu.trafsim.Locations;
 import org.santfeliu.trafsim.MapViewer;
 import org.santfeliu.trafsim.MapViewer.Selection;
+import org.santfeliu.trafsim.PickInfo;
 import org.santfeliu.trafsim.Projector;
+import org.santfeliu.trafsim.RoadGraph;
+import org.santfeliu.trafsim.Simulation;
 import org.santfeliu.trafsim.TrafficSimulator;
+import org.santfeliu.trafsim.Vehicles;
 import org.santfeliu.trafsim.geom.Geometry;
 import org.santfeliu.trafsim.geom.LineString;
 import org.santfeliu.trafsim.geom.Point;
@@ -55,6 +65,7 @@ import org.santfeliu.trafsim.geom.Point;
 public class MoveTool extends Tool implements
   MouseListener, MouseMotionListener, MapViewer.Painter
 {
+  private final PickInfo pick = new PickInfo();
   private Point3d origin;
   private Point3d destination;
 
@@ -66,7 +77,7 @@ public class MoveTool extends Tool implements
   @Override
   public String getName()
   {
-    return "move";
+    return "moveTool";
   }
 
   @Override
@@ -93,6 +104,37 @@ public class MoveTool extends Tool implements
   @Override
   public void mouseClicked(MouseEvent e)
   {
+    if (e.isShiftDown() || e.isControlDown()) return;
+
+    MapViewer mapViewer = getMapViewer();
+    Projector projector = mapViewer.getProjector();
+    double tolerance = SELECT_PIXELS / projector.getScaleX();
+    Point3d worldPoint = new Point3d();
+    projector.unproject(e.getPoint(), worldPoint);
+    Simulation simulation = getSimulation();
+    pick.clear();
+    if (mapViewer.isLocationsVisible())
+    {
+      Locations locations = simulation.getLocations();
+      Finder.findByPoint(locations.getFeatures(), worldPoint, tolerance, pick);
+    }
+    if (mapViewer.isVehiclesVisible())
+    {
+      Vehicles vehicles = simulation.getVehicles();
+      Finder.findByPoint(vehicles.getFeatures(), worldPoint, tolerance, pick);
+    }
+    if (mapViewer.isEdgesVisible())
+    {
+      RoadGraph roadGraph = simulation.getRoadGraph();
+      Finder.findByPoint(roadGraph.getFeatures(), worldPoint, tolerance, pick);
+    }
+    Selection selection = mapViewer.getSelection();
+    selection.clear();
+    if (pick.getFeature() != null)
+    {
+      selection.add(pick.getFeature());
+    }
+    mapViewer.repaint();
   }
 
   @Override
@@ -111,8 +153,13 @@ public class MoveTool extends Tool implements
   {
     if (origin != null && destination != null)
     {
-      moveSelection();
-      getMapViewer().repaint();
+      Vector3d vector = new Vector3d();
+      vector.sub(destination, origin);
+      List<Feature> features =
+        new ArrayList<Feature>(getMapViewer().getSelection());
+
+      moveFeatures(features, vector);
+      getUndoManager().addEdit(new Undo(features, vector));
     }
     origin = null;
     destination = null;
@@ -187,18 +234,49 @@ public class MoveTool extends Tool implements
     }
   }
 
-  private void moveSelection()
+  private void moveFeatures(Collection<Feature> features, Vector3d vector)
   {
-    Vector3d move = new Vector3d();
-    move.sub(destination, origin);
     Matrix4d matrix = new Matrix4d();
     matrix.setIdentity();
-    matrix.setTranslation(move);
+    matrix.setTranslation(vector);
 
-    Selection selection = getMapViewer().getSelection();
-    for (Feature feature : selection)
+    for (Feature feature : features)
     {
       feature.transform(matrix);
+    }
+    getMapViewer().repaint();
+    trafficSimulator.setModified(true);
+  }
+
+  public class Undo extends BasicUndoableEdit
+  {
+    private final List<Feature> features;
+    private final Vector3d vector;
+
+    private Undo(List<Feature> features, Vector3d vector)
+    {
+      this.features = features;
+      this.vector = vector;
+    }
+
+    @Override
+    public void undo() throws CannotUndoException
+    {
+      Vector3d reverseVector = new Vector3d(vector);
+      reverseVector.negate();
+      moveFeatures(features, reverseVector);
+    }
+
+    @Override
+    public void redo() throws CannotRedoException
+    {
+      moveFeatures(features, vector);
+    }
+
+    @Override
+    public void die()
+    {
+      features.clear();
     }
   }
 }

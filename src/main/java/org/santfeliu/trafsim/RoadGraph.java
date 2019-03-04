@@ -214,7 +214,7 @@ public class RoadGraph extends Layer<Edge>
         edges.remove(this);
       }
     }
-    
+
     @Override
     public boolean isRemoved()
     {
@@ -236,6 +236,18 @@ public class RoadGraph extends Layer<Edge>
       }
     }
 
+    public Edge duplicate()
+    {
+      return new Edge(lineString.duplicate(), speed, lanes);
+    }
+
+    @Override
+    public void loadAttributes(Map attributes)
+    {
+      attributes.put("SPEED", speed);
+      attributes.put("LANES", lanes);
+    }
+
     @Override
     public String toString()
     {
@@ -246,13 +258,6 @@ public class RoadGraph extends Layer<Edge>
     {
       if (indicators == null) indicators = new Indicators();
       return indicators;
-    }
-
-    @Override
-    public void loadAttributes(Map attributes)
-    {
-      attributes.put("SPEED", speed);
-      attributes.put("LANES", lanes);
     }
 
     boolean isLinked()
@@ -278,7 +283,7 @@ public class RoadGraph extends Layer<Edge>
       {
         sourceNode.outEdges.add(this);
       }
-      
+
       // link target node
       Point3d endPoint = vertices.get(vertices.size() - 1);
       targetNode = nodes.get(endPoint);
@@ -384,7 +389,7 @@ public class RoadGraph extends Layer<Edge>
     }
     edges.clear();
   }
-  
+
   public void snapToGrid(double gridSize)
   {
     ArrayList<Edge> edgeList = new ArrayList<Edge>();
@@ -398,14 +403,14 @@ public class RoadGraph extends Layer<Edge>
       Point3d endPoint = vertices.get(vertices.size() - 1);
       round(startPoint, gridSize);
       round(endPoint, gridSize);
-      if (!startPoint.equals(endPoint))   
+      if (!startPoint.equals(endPoint))
       {
         edge.linkNodes();
         edges.add(edge);
       }
     }
   }
-  
+
   private void round(Point3d point, double gridSize)
   {
     point.x = Math.round(point.x / gridSize) * gridSize;

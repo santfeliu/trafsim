@@ -28,7 +28,7 @@
  *   and
  *   https://www.gnu.org/licenses/lgpl.txt
  */
-package org.santfeliu.trafsim.tool;
+package org.santfeliu.trafsim.action;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -36,9 +36,13 @@ import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
+import javax.swing.undo.CannotRedoException;
+import javax.swing.undo.CannotUndoException;
 import javax.vecmath.Point3d;
 import org.santfeliu.trafsim.Box;
 import org.santfeliu.trafsim.EdgeDialog;
@@ -83,7 +87,7 @@ public class SelectTool extends Tool
   @Override
   public String getName()
   {
-    return "select";
+    return "selectTool";
   }
 
   @Override
@@ -144,7 +148,6 @@ public class SelectTool extends Tool
     }
     if (e.getClickCount() > 1)
     {
-      Selection selection = mapViewer.getSelection();
       if (feature instanceof Edge)
       {
         Edge edge = (Edge)feature;
@@ -153,17 +156,10 @@ public class SelectTool extends Tool
         dialog.setLanes(edge.getLanes());
         if (dialog.showDialog())
         {
-          for (Feature ent : selection)
-          {
-            if (ent instanceof Edge)
-            {
-              edge = (Edge)ent;
-              edge.setSpeed(dialog.getSpeed());
-              edge.setLanes(dialog.getLanes());
-            }
-          }
-          mapViewer.repaint();
-          trafficSimulator.setModified(true);
+          List<Edge> edges = getSelectedEdges();
+          getUndoManager().addEdit(
+            new UndoEdges(edges, dialog.getSpeed(), dialog.getLanes()));
+          changeEdges(edges, dialog.getSpeed(), dialog.getLanes());
         }
       }
       else if (feature instanceof Location)
@@ -175,6 +171,9 @@ public class SelectTool extends Tool
         dialog.setOrigin(location.isOrigin());
         if (dialog.showDialog())
         {
+          getUndoManager().addEdit(new UndoLocation(location,
+            dialog.getLocationName(), dialog.getLocationLabel(),
+            dialog.isOrigin()));
           location.setName(dialog.getLocationName());
           location.setLabel(dialog.getLocationLabel());
           location.setOrigin(dialog.isOrigin());
@@ -191,17 +190,11 @@ public class SelectTool extends Tool
         dialog.setGroup(vehicleGroup.getGroup());
         if (dialog.showDialog())
         {
-          for (Feature ent : selection)
-          {
-            if (ent instanceof VehicleGroup)
-            {
-              vehicleGroup = (VehicleGroup)ent;
-              vehicleGroup.setCount(dialog.getCount());
-              vehicleGroup.setGroup(dialog.getGroup());
-            }
-          }
-          mapViewer.repaint();
-          trafficSimulator.setModified(true);
+          List<VehicleGroup> vehicleGroups = getSelectedVehicleGroups();
+          getUndoManager().addEdit(new UndoVehicleGroups(vehicleGroups,
+            dialog.getCount(), dialog.getGroup()));
+          changeVehicleGroups(vehicleGroups,
+            dialog.getCount(), dialog.getGroup());
         }
       }
     }
@@ -332,6 +325,169 @@ public class SelectTool extends Tool
         break;
       default:
         break;
+    }
+  }
+
+  private void changeEdges(List<Edge> edges, int speed, int lanes)
+  {
+    for (Edge edge : edges)
+    {
+      edge.setSpeed(speed);
+      edge.setLanes(lanes);
+    }
+    getMapViewer().repaint();
+    trafficSimulator.setModified(true);
+  }
+
+  private void changeVehicleGroups(List<VehicleGroup> vehicleGroups,
+    int count, String group)
+  {
+    for (VehicleGroup vehicleGroup : vehicleGroups)
+    {
+      vehicleGroup.setCount(count);
+      vehicleGroup.setGroup(group);
+    }
+    getMapViewer().repaint();
+    trafficSimulator.setModified(true);
+  }
+
+  public class UndoEdges extends BasicUndoableEdit
+  {
+    private final List<Edge> edges;
+    private final List values;
+    private final int speed;
+    private final int lanes;
+
+    private UndoEdges(List<Edge> edges, int speed, int lanes)
+    {
+      this.edges = edges;
+      this.speed = speed;
+      this.lanes = lanes;
+      this.values =  new ArrayList(edges.size() * 2);
+      for (Edge edge : edges)
+      {
+        values.add(edge.getSpeed());
+        values.add(edge.getLanes());
+      }
+    }
+
+    @Override
+    public void undo() throws CannotUndoException
+    {
+      int i = 0;
+      for (Edge edge : edges)
+      {
+        edge.setSpeed((int)values.get(i));
+        edge.setLanes((int)values.get(i + 1));
+        i += 2;
+      }
+      getMapViewer().repaint();
+      trafficSimulator.setModified(true);
+    }
+
+    @Override
+    public void redo() throws CannotRedoException
+    {
+      changeEdges(edges, speed, lanes);
+    }
+
+    @Override
+    public void die()
+    {
+      edges.clear();
+      values.clear();
+    }
+  }
+
+  public class UndoLocation extends BasicUndoableEdit
+  {
+    private final Location location;
+    private final String name;
+    private final String label;
+    private final boolean origin;
+    private final String oldName;
+    private final String oldLabel;
+    private final boolean oldOrigin;
+
+    private UndoLocation(Location location, String name, String label,
+      boolean origin)
+    {
+      this.location = location;
+      this.name = name;
+      this.label = label;
+      this.origin = origin;
+      this.oldName = location.getName();
+      this.oldLabel = location.getLabel();
+      this.oldOrigin = location.isOrigin();
+    }
+
+    @Override
+    public void undo() throws CannotUndoException
+    {
+      location.setName(oldName);
+      location.setLabel(oldLabel);
+      location.setOrigin(oldOrigin);
+      getMapViewer().repaint();
+      trafficSimulator.setModified(true);
+    }
+
+    @Override
+    public void redo() throws CannotRedoException
+    {
+      location.setName(name);
+      location.setLabel(label);
+      location.setOrigin(origin);
+      getMapViewer().repaint();
+      trafficSimulator.setModified(true);
+    }
+  }
+
+  public class UndoVehicleGroups extends BasicUndoableEdit
+  {
+    private final List<VehicleGroup> vehicleGroups;
+    private final List values;
+    private final int count;
+    private final String group;
+
+    private UndoVehicleGroups(List<VehicleGroup> vehicleGroups,
+      int count, String group)
+    {
+      this.vehicleGroups = vehicleGroups;
+      this.count = count;
+      this.group = group;
+      this.values =  new ArrayList(vehicleGroups.size() * 2);
+      for (VehicleGroup edge : vehicleGroups)
+      {
+        values.add(edge.getCount());
+        values.add(edge.getGroup());
+      }
+    }
+
+    @Override
+    public void undo() throws CannotUndoException
+    {
+      int i = 0;
+      for (VehicleGroup vehicleGroup : vehicleGroups)
+      {
+        vehicleGroup.setCount((int)values.get(i));
+        vehicleGroup.setGroup((String)values.get(i + 1));
+        i += 2;
+      }
+      getMapViewer().repaint();
+      trafficSimulator.setModified(true);
+    }
+
+    @Override
+    public void redo() throws CannotRedoException
+    {
+      changeVehicleGroups(vehicleGroups, count, group);
+    }
+
+    @Override
+    public void die()
+    {
+      vehicleGroups.clear();
+      values.clear();
     }
   }
 }

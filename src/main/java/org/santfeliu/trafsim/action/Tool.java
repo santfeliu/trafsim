@@ -28,33 +28,28 @@
  *   and
  *   https://www.gnu.org/licenses/lgpl.txt
  */
-package org.santfeliu.trafsim.tool;
+package org.santfeliu.trafsim.action;
 
 import java.awt.event.ActionEvent;
-import javax.swing.AbstractAction;
-import javax.swing.Action;
 import javax.vecmath.Point3d;
 import org.santfeliu.trafsim.Finder;
 import org.santfeliu.trafsim.MapViewer;
 import org.santfeliu.trafsim.Projector;
 import org.santfeliu.trafsim.RoadGraph;
-import org.santfeliu.trafsim.Simulation;
 import org.santfeliu.trafsim.TrafficSimulator;
 
 /**
  *
  * @author realor
  */
-public abstract class Tool extends AbstractAction
+public abstract class Tool extends SimulatorAction
 {
   protected static final int SELECT_PIXELS = 8;
   protected static final int SNAP_PIXELS = 8;
-  protected TrafficSimulator trafficSimulator;
 
   public Tool(TrafficSimulator trafficSimulator)
   {
-    this.trafficSimulator = trafficSimulator;
-    initValues();
+    super(trafficSimulator);
   }
 
   @Override
@@ -63,31 +58,9 @@ public abstract class Tool extends AbstractAction
     trafficSimulator.start(this);
   }
 
-  public abstract String getName();
-
   public abstract void start();
 
   public abstract void stop();
-
-  public MapViewer getMapViewer()
-  {
-    return trafficSimulator.getMapViewer();
-  }
-
-  public Simulation getSimulation()
-  {
-    return trafficSimulator.getSimulation();
-  }
-
-  public Projector getProjector()
-  {
-    return trafficSimulator.getMapViewer().getProjector();
-  }
-
-  public void info(String message)
-  {
-    trafficSimulator.info(getName() + "Tool." + message);
-  }
 
   protected void project(Point3d worldPoint, java.awt.Point dp)
   {
@@ -115,8 +88,8 @@ public abstract class Tool extends AbstractAction
     return Finder.snapNode(roadGraph, selectPoint, snapPoint, tolerance);
   }
 
-  private void initValues()
+  public void info(String message)
   {
-    putValue(Action.NAME, trafficSimulator.getMessage(getName() + "Tool.name"));
+    trafficSimulator.info(getName() + "." + message);
   }
 }

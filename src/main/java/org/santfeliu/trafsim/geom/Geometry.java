@@ -53,6 +53,8 @@ public abstract class Geometry
     return boundingBox;
   }
 
+  public abstract Geometry duplicate();
+
   protected void updateBoundingBox()
   {
     boundingBox = null;

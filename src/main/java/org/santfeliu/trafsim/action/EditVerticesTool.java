@@ -28,7 +28,7 @@
  *   and
  *   https://www.gnu.org/licenses/lgpl.txt
  */
-package org.santfeliu.trafsim.tool;
+package org.santfeliu.trafsim.action;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -36,7 +36,10 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import javax.swing.undo.CannotRedoException;
+import javax.swing.undo.CannotUndoException;
 import javax.vecmath.Point3d;
 import org.santfeliu.trafsim.Feature;
 import org.santfeliu.trafsim.Finder;
@@ -62,10 +65,11 @@ import org.santfeliu.trafsim.geom.Point;
 public class EditVerticesTool extends Tool implements
   MouseListener, MouseMotionListener, Painter
 {
-  private final PickInfo pick = new PickInfo();  
+  private final PickInfo pick = new PickInfo();
   private final List<PickInfo> picks = new ArrayList<PickInfo>();
   private java.awt.Point lastPoint;
   private boolean dragging;
+  private List<Geometry> dragGeometries;
 
   public EditVerticesTool(TrafficSimulator trafficSimulator)
   {
@@ -75,7 +79,7 @@ public class EditVerticesTool extends Tool implements
   @Override
   public String getName()
   {
-    return "editVertices";
+    return "editVerticesTool";
   }
 
   @Override
@@ -101,7 +105,7 @@ public class EditVerticesTool extends Tool implements
   public void mouseClicked(MouseEvent e)
   {
     if (e.isShiftDown() || e.isControlDown()) return;
-    
+
     MapViewer mapViewer = getMapViewer();
     Projector projector = mapViewer.getProjector();
     double tolerance = SELECT_PIXELS / projector.getScaleX();
@@ -142,7 +146,7 @@ public class EditVerticesTool extends Tool implements
       {
         if (picks.isEmpty()) // not on vertex
         {
-          splitEdge(e.getPoint());        
+          splitEdge(e.getPoint());
         }
         else // on vertex
         {
@@ -163,6 +167,10 @@ public class EditVerticesTool extends Tool implements
       else
       {
         dragging = !picks.isEmpty();
+        if (dragging)
+        {
+          dragGeometries = copyPickGeometries();
+        }
       }
     }
   }
@@ -170,8 +178,16 @@ public class EditVerticesTool extends Tool implements
   @Override
   public void mouseReleased(MouseEvent e)
   {
-    dragging = false;
-    getMapViewer().repaint();
+    if (dragging)
+    {
+      List<Feature> features = copyPickFeatures();
+      List<Geometry> oldGeometries = dragGeometries;
+      List<Geometry> newGeometries = copyPickGeometries();
+      getUndoManager().addEdit(new Undo(features, oldGeometries,
+        features, newGeometries));
+      dragging = false;
+      getMapViewer().repaint();
+    }
   }
 
   @Override
@@ -199,7 +215,7 @@ public class EditVerticesTool extends Tool implements
       {
         Feature feature = pi.getFeature();
         Point3d worldPoint = new Point3d();
-        snapNode(e.getPoint(), worldPoint);
+        snapNode(lastPoint, worldPoint);
         Geometry geometry = feature.getGeometry();
         if (geometry instanceof Point)
         {
@@ -210,12 +226,13 @@ public class EditVerticesTool extends Tool implements
         {
           LineString lineString = (LineString)geometry;
           List<Point3d> vertices = lineString.getVertices();
-          vertices.get(pi.getIndex()).set(worldPoint);        
+          vertices.get(pi.getIndex()).set(worldPoint);
         }
         feature.add();
       }
       MapViewer mapViewer = getMapViewer();
       mapViewer.repaint();
+      trafficSimulator.setModified(true);
     }
   }
 
@@ -224,7 +241,7 @@ public class EditVerticesTool extends Tool implements
   {
     lastPoint = e.getPoint();
     MapViewer mapViewer = getMapViewer();
-    if (!mapViewer.getSelection().isEmpty()) 
+    if (!mapViewer.getSelection().isEmpty())
     {
       mapViewer.repaint();
     }
@@ -246,7 +263,7 @@ public class EditVerticesTool extends Tool implements
         for (int i = 0; i < vertices.size(); i++)
         {
           projector.project(vertices.get(i), dp);
-          g.setColor(i == 0 || i == vertices.size() - 1 ? 
+          g.setColor(i == 0 || i == vertices.size() - 1 ?
             Color.BLACK : Color.BLUE);
           g.fillOval(dp.x - 2, dp.y - 2, 5, 5);
         }
@@ -267,7 +284,7 @@ public class EditVerticesTool extends Tool implements
       for (PickInfo pi : picks)
       {
         projector.project(pi.getOnFeaturePoint(), dp);
-          g.drawOval(dp.x - 4, dp.y - 4, 8, 8);
+        g.drawOval(dp.x - 4, dp.y - 4, 8, 8);
       }
     }
   }
@@ -287,6 +304,7 @@ public class EditVerticesTool extends Tool implements
       Geometry geometry = feature.getGeometry();
       if (geometry instanceof LineString)
       {
+        Geometry oldGeometry = geometry.duplicate();
         feature.remove();
         LineString lineString = (LineString)geometry;
         List<Point3d> vertices = lineString.getVertices();
@@ -296,12 +314,22 @@ public class EditVerticesTool extends Tool implements
         vertices.add(index + 1, point);
         feature.add();
         mapViewer.repaint();
+        trafficSimulator.setModified(true);
+        List<Feature> features = new ArrayList<Feature>();
+        features.add(feature);
+        getUndoManager().addEdit(new Undo(
+          features,
+          Collections.singletonList(oldGeometry),
+          features,
+          Collections.singletonList(lineString.duplicate())));
       }
     }
   }
 
   private void removeVertex()
   {
+    List<Feature> features = copyPickFeatures();
+    List<Geometry> oldGeometries = copyPickGeometries();
     for (PickInfo pi : picks)
     {
       Feature feature = pi.getFeature();
@@ -315,10 +343,14 @@ public class EditVerticesTool extends Tool implements
           feature.remove();
           vertices.remove(pi.getIndex());
           feature.add();
-          getMapViewer().repaint();
         }
       }
     }
+    List<Geometry> newGeometries = copyPickGeometries();
+    getMapViewer().repaint();
+    trafficSimulator.setModified(true);
+    getUndoManager().addEdit(new Undo(features, oldGeometries,
+      features, newGeometries));
   }
 
   private void splitEdge(java.awt.Point dp)
@@ -361,21 +393,34 @@ public class EditVerticesTool extends Tool implements
       }
       RoadGraph roadGraph = mapViewer.getSimulation().getRoadGraph();
 
-      Edge edge1 = roadGraph.newEdge(new LineString(vertices1), 
+      Edge edge1 = roadGraph.newEdge(new LineString(vertices1),
         edge.getSpeed(), edge.getLanes());
       edge1.add();
 
-      Edge edge2 = roadGraph.newEdge(new LineString(vertices2), 
+      Edge edge2 = roadGraph.newEdge(new LineString(vertices2),
         edge.getSpeed(), edge.getLanes());
       edge2.add();
 
       selection.add(edge1);
-      selection.add(edge2);      
-      
+      selection.add(edge2);
+
       mapViewer.repaint();
+      trafficSimulator.setModified(true);
+
+      List<Feature> newFeatures = new ArrayList<Feature>();
+      newFeatures.add(edge1);
+      newFeatures.add(edge2);
+      List<Geometry> newGeometries = new ArrayList<Geometry>();
+      newGeometries.add(edge1.getLineString().duplicate());
+      newGeometries.add(edge2.getLineString().duplicate());
+
+      getUndoManager().addEdit(new Undo(
+        Collections.singletonList(edge),
+        Collections.singletonList(edge.getLineString()),
+        newFeatures, newGeometries));
     }
   }
-  
+
   private void joinEdges()
   {
     if (picks.size() == 2)
@@ -400,13 +445,111 @@ public class EditVerticesTool extends Tool implements
       edge1.remove();
       edge2.remove();
       MapViewer mapViewer = getMapViewer();
+      mapViewer.getSelection().remove(edge1);
       mapViewer.getSelection().remove(edge2);
-      
-      List<Point3d> vertices = edge1.getLineString().getVertices();
+
+      Edge edge3 = edge1.duplicate();
+      List<Point3d> vertices = edge3.getLineString().getVertices();
       vertices.remove(vertices.size() - 1);
-      vertices.addAll(edge2.getLineString().getVertices());
-      edge1.add();
+      vertices.addAll(edge2.getLineString().duplicate().getVertices());
+      edge3.add();
+      mapViewer.getSelection().add(edge3);
       mapViewer.repaint();
+      trafficSimulator.setModified(true);
+
+      List<Feature> oldFeatures = new ArrayList<Feature>();
+      oldFeatures.add(edge1);
+      oldFeatures.add(edge2);
+      List<Geometry> oldGeometries = new ArrayList<Geometry>();
+      oldGeometries.add(edge1.getGeometry());
+      oldGeometries.add(edge2.getGeometry());
+
+      getUndoManager().addEdit(new Undo(oldFeatures, oldGeometries,
+        Collections.singletonList(edge3),
+        Collections.singletonList(edge3.getLineString().duplicate())));
+    }
+  }
+
+  private List<Feature> copyPickFeatures()
+  {
+    ArrayList<Feature> features = new ArrayList<Feature>();
+    for (PickInfo pi : picks)
+    {
+      features.add(pi.getFeature());
+    }
+    return features;
+  }
+
+  private List<Geometry> copyPickGeometries()
+  {
+    ArrayList<Geometry> geometries = new ArrayList<Geometry>();
+    for (PickInfo pi : picks)
+    {
+      Feature feature = pi.getFeature();
+      Geometry geometry = feature.getGeometry();
+      geometries.add(geometry.duplicate());
+    }
+    return geometries;
+  }
+
+  public class Undo extends BasicUndoableEdit
+  {
+    private final List<Feature> oldFeatures;
+    private final List<Geometry> oldGeometries;
+    private final List<Feature> newFeatures;
+    private final List<Geometry> newGeometries;
+
+    private Undo(List<Feature> oldFeatures, List<Geometry> oldGeometries,
+            List<Feature> newFeatures, List<Geometry> newGeometries)
+    {
+      this.oldFeatures = oldFeatures;
+      this.oldGeometries = oldGeometries;
+      this.newFeatures = newFeatures;
+      this.newGeometries = newGeometries;
+    }
+
+    @Override
+    public void undo() throws CannotUndoException
+    {
+      for (Feature feature : newFeatures)
+      {
+        feature.remove();
+      }
+      if (newFeatures != oldFeatures)
+      {
+        getSelection().removeAll(newFeatures);
+      }
+      for (int i = 0; i < oldFeatures.size(); i++)
+      {
+        Feature feature = oldFeatures.get(i);
+        feature.remove();
+        feature.setGeometry(oldGeometries.get(i));
+        feature.add();
+      }
+      getMapViewer().repaint();
+      trafficSimulator.setModified(true);
+    }
+
+    @Override
+    public void redo() throws CannotRedoException
+    {
+      for (Feature feature : oldFeatures)
+      {
+        feature.remove();
+      }
+      if (newFeatures != oldFeatures)
+      {
+        getSelection().removeAll(oldFeatures);
+      }
+      for (int i = 0; i < newFeatures.size(); i++)
+      {
+        Feature feature = newFeatures.get(i);
+        feature.remove();
+        feature.setGeometry(newGeometries.get(i));
+        feature.add();
+      }
+      getMapViewer().repaint();
+      trafficSimulator.setModified(true);
     }
   }
 }

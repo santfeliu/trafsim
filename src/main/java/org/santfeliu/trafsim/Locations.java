@@ -75,7 +75,7 @@ public class Locations extends Layer<Location>
     for (Location location : features)
     {
       location.removed = true;
-    }    
+    }
     features.clear();
   }
 
@@ -187,11 +187,16 @@ public class Locations extends Layer<Location>
         removed = true;
       }
     }
-    
+
     @Override
     public boolean isRemoved()
     {
       return removed;
+    }
+
+    public Location duplicate()
+    {
+      return new Location(name, label, point.duplicate(), origin);
     }
 
     @Override
