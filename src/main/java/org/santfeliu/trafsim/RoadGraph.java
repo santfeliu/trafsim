@@ -90,14 +90,6 @@ public class RoadGraph extends Layer<Edge>
       }
       return connected;
     }
-
-    @Override
-    public String toString()
-    {
-      Point3d position = point.getPosition();
-      return "Node(" + position.x + ", " + position.y + ", " + position.z +
-        ", inEdges: " + inEdges.size() + ", outEdges: " + outEdges.size() + ")";
-    }
   }
 
   public class Edge extends Feature
@@ -246,12 +238,6 @@ public class RoadGraph extends Layer<Edge>
     {
       attributes.put("SPEED", speed);
       attributes.put("LANES", lanes);
-    }
-
-    @Override
-    public String toString()
-    {
-      return "Edge(source: " + sourceNode + ", target: " + targetNode + ")";
     }
 
     public Indicators getIndicators()

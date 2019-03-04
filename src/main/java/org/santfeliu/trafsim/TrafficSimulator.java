@@ -90,6 +90,7 @@ public class TrafficSimulator extends javax.swing.JFrame
   private Tool currentTool;
   private boolean modified;
   private final SimulatorUndoManager undoManager;
+  private Console console;
 
   /**
    * Creates new form TrafficSimulator
@@ -226,6 +227,12 @@ public class TrafficSimulator extends javax.swing.JFrame
     indicatorsCheckBoxMenuItem.setSelected(visible);
     mapViewer.setIndicatorsVisible(indicatorsCheckBoxMenuItem.isSelected());
   }
+  
+  @Override
+  public String toString()
+  {
+    return getClass().getName();
+  }
 
 
   /**
@@ -278,6 +285,8 @@ public class TrafficSimulator extends javax.swing.JFrame
     deadEndsCheckBoxMenuItem = new javax.swing.JCheckBoxMenuItem();
     originsCheckBoxMenuItem = new javax.swing.JCheckBoxMenuItem();
     indicatorsCheckBoxMenuItem = new javax.swing.JCheckBoxMenuItem();
+    viewSeparator3 = new javax.swing.JPopupMenu.Separator();
+    consoleMenuItem = new javax.swing.JMenuItem();
     toolsMenu = new javax.swing.JMenu();
     selectMenuItem = new javax.swing.JMenuItem();
     moveMenuItem = new javax.swing.JMenuItem();
@@ -588,6 +597,18 @@ public class TrafficSimulator extends javax.swing.JFrame
       }
     });
     viewMenu.add(indicatorsCheckBoxMenuItem);
+    viewMenu.add(viewSeparator3);
+
+    consoleMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, 0));
+    consoleMenuItem.setText(bundle.getString("menu.console")); // NOI18N
+    consoleMenuItem.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        consoleMenuItemActionPerformed(evt);
+      }
+    });
+    viewMenu.add(consoleMenuItem);
 
     menuBar.add(viewMenu);
 
@@ -925,6 +946,17 @@ public class TrafficSimulator extends javax.swing.JFrame
     }
   }//GEN-LAST:event_redoMenuItemActionPerformed
 
+  private void consoleMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_consoleMenuItemActionPerformed
+  {//GEN-HEADEREND:event_consoleMenuItemActionPerformed
+    if (console == null)
+    {
+      console = new Console(this);
+      console.setSize(500, 400);
+      console.setLocationRelativeTo(this);
+    }
+    console.setVisible(true);
+  }//GEN-LAST:event_consoleMenuItemActionPerformed
+
   public class SimulatorUndoManager extends UndoManager
   {
     @Override
@@ -1065,6 +1097,7 @@ public class TrafficSimulator extends javax.swing.JFrame
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JMenuItem aboutMenuItem;
   private javax.swing.JCheckBoxMenuItem baseLayersCheckBoxMenuItem;
+  private javax.swing.JMenuItem consoleMenuItem;
   private javax.swing.JCheckBoxMenuItem deadEndsCheckBoxMenuItem;
   private javax.swing.JMenuItem deleteMenuItem;
   private javax.swing.JMenuItem drawEdgeMenuItem;
@@ -1113,6 +1146,7 @@ public class TrafficSimulator extends javax.swing.JFrame
   private javax.swing.JMenu viewMenu;
   private javax.swing.JPopupMenu.Separator viewSeparator1;
   private javax.swing.JPopupMenu.Separator viewSeparator2;
+  private javax.swing.JPopupMenu.Separator viewSeparator3;
   private javax.swing.JMenuItem zoomAllMenuItem;
   private javax.swing.JMenuItem zoomInMenuItem;
   private javax.swing.JMenuItem zoomOutMenuItem;

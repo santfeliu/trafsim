@@ -295,6 +295,12 @@ public class MapViewer extends javax.swing.JPanel
   }
 
   @Override
+  public String toString()
+  {
+    return getClass().getName();
+  }
+  
+  @Override
   public void paintComponent(Graphics g)
   {
     g.setColor(Color.WHITE);
