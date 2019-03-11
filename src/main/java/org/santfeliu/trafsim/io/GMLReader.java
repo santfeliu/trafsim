@@ -120,7 +120,11 @@ public class GMLReader
         {
           Element field = (Element)featureList.item(j);
           Node content = field.getFirstChild();
-          if (content.getNodeType() == Node.TEXT_NODE)
+          if (content == null)
+          {
+            // ignore
+          }
+          else if (content.getNodeType() == Node.TEXT_NODE)
           {
             String fieldName = field.getNodeName();
             int index = fieldName.indexOf(":");

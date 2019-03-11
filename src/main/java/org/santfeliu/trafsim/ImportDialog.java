@@ -398,7 +398,7 @@ public class ImportDialog extends javax.swing.JDialog
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
     vehiclesPanel.add(countLabel, gridBagConstraints);
 
-    countTextField.setText("LANES");
+    countTextField.setText("COUNT");
     countTextField.setPreferredSize(new java.awt.Dimension(140, 26));
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 1;
