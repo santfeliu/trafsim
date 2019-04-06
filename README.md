@@ -21,27 +21,27 @@ For each group we must indicate what percentage of vehicles goes to each
 destination (location). This can be achived through the menu option: 
 `Edit > groups`. The group destinations must be specified this way:
 
-    group <group_name1>
-    location <location_name1> <factor 0..1>
-    location <location_name2> <factor 0..1>
+    --- <group_name1>
+    <location_name1> <factor 0..1>
+    <location_name2> <factor 0..1>
     ...
-    location <location_nameN> <factor 0..1>
+    <location_nameN> <factor 0..1>
 
-    group <group_name2>
-    location <location_name1> <factor 0..1>
+    --- <group_name2>
+    <location_name1> <factor 0..1>
     ...
 
 Example:
 
-    group grp_a
-    location  st_joan   0.4
-    location  st_feliu  0.4
-    location  molins    0.2
+    --- group_a
+    st_joan   0.4
+    st_feliu  0.4
+    molins    0.2
 
-    group grp_b
-    location  st_joan   0.3
-    location  st_feliu  0.4
-    location  molins    0.3
+    --- group_b
+    st_joan   0.3
+    st_feliu  0.4
+    molins    0.3
 
 The simulation moves the vehicles to their destinations through the fastest 
 route. These destinations are selected according to the group of the vehicles.
