@@ -94,7 +94,8 @@ public class DrawVehicleGroupTool extends Tool implements MouseListener
     if (dialog.showDialog())
     {
       VehicleGroup vehicleGroup = simulation.getVehicles().newVehicleGroup(
-        new Point(world), dialog.getCount(), dialog.getGroup());
+        new Point(world), dialog.getCount(),
+        dialog.getGroup(), dialog.getMovements());
       vehicleGroup.add();
       mapViewer.repaint();
       trafficSimulator.setModified(true);

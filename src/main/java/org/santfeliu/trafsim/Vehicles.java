@@ -62,9 +62,10 @@ public class Vehicles extends Layer<VehicleGroup>
     return features;
   }
 
-  public VehicleGroup newVehicleGroup(Point point, int count, String group)
+  public VehicleGroup newVehicleGroup(Point point, int count, String group,
+    Movements movements)
   {
-    return new VehicleGroup(point, count, group);
+    return new VehicleGroup(point, count, group, movements);
   }
 
   @Override
@@ -82,14 +83,16 @@ public class Vehicles extends Layer<VehicleGroup>
     private Point point;
     private int count;
     private String group;
+    private Movements movements;
     private Indicators indicators;
     private boolean removed;
 
-    VehicleGroup(Point point, int count, String group)
+    VehicleGroup(Point point, int count, String group, Movements movements)
     {
       this.point = point;
       this.count = count;
       this.group = group;
+      this.movements = movements;
       this.removed = true;
     }
 
@@ -121,6 +124,16 @@ public class Vehicles extends Layer<VehicleGroup>
     public void setGroup(String group)
     {
       this.group = group;
+    }
+
+    public Movements getMovements()
+    {
+      return movements;
+    }
+
+    public void setMovements(Movements movements)
+    {
+      this.movements = movements;
     }
 
     @Override
@@ -172,7 +185,8 @@ public class Vehicles extends Layer<VehicleGroup>
 
     public VehicleGroup duplicate()
     {
-      return new VehicleGroup(point.duplicate(), count, group);
+      return new VehicleGroup(point.duplicate(), count, group,
+        movements == null ? null : new Movements(movements));
     }
 
     @Override

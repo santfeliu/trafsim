@@ -621,7 +621,7 @@ public class ImportDialog extends javax.swing.JDialog
               groupName = value.toString();
             }
             features.add(simulation.getVehicles().newVehicleGroup(
-              (Point)geometry, numVehicles, groupName));
+              (Point)geometry, numVehicles, groupName, null));
           }
         };
       }

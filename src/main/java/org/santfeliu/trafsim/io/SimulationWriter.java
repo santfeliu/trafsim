@@ -34,12 +34,15 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.vecmath.Point3d;
 import org.santfeliu.trafsim.GenericLayer;
 import org.santfeliu.trafsim.GenericLayer.GenericFeature;
 import org.santfeliu.trafsim.Group;
 import org.santfeliu.trafsim.Group.Journey;
 import org.santfeliu.trafsim.Locations.Location;
+import org.santfeliu.trafsim.Movements;
 import org.santfeliu.trafsim.RoadGraph;
 import org.santfeliu.trafsim.RoadGraph.Edge;
 import org.santfeliu.trafsim.Simulation;
@@ -208,6 +211,18 @@ public class SimulationWriter extends XMLWriter
     startTag("group");
     writeText(vehicleGroup.getGroup());
     endTag("group");
+
+    startTag("movements");
+    Movements movements = vehicleGroup.getMovements();
+    Set<Map.Entry<String, Integer>> entrySet = movements.entrySet();
+    for (Map.Entry<String, Integer> entry : entrySet)
+    {
+      startTag("location");
+      writeAttribute("name", entry.getKey());
+      writeAttribute("count", entry.getValue());
+      endTag("location");
+    }
+    endTag("movements");
 
     endTag("vehicle-group");
   }

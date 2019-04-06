@@ -40,6 +40,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import javax.swing.ImageIcon;
@@ -227,7 +228,7 @@ public class TrafficSimulator extends javax.swing.JFrame
     indicatorsCheckBoxMenuItem.setSelected(visible);
     mapViewer.setIndicatorsVisible(indicatorsCheckBoxMenuItem.isSelected());
   }
-  
+
   @Override
   public String toString()
   {
@@ -870,8 +871,23 @@ public class TrafficSimulator extends javax.swing.JFrame
     dialog.setGroups(simulation.getGroups());
     if (dialog.showDialog())
     {
+      Map<String, Group> groups = dialog.getGroups();
       simulation.getGroups().clear();
-      simulation.getGroups().putAll(dialog.getGroups());
+      simulation.getGroups().putAll(groups);
+
+      Distributor distributor = new Distributor();
+      Vehicles vehicles = simulation.getVehicles();
+      for (Vehicles.VehicleGroup vehicleGroup : vehicles.getFeatures())
+      {
+        int vehicleCount = vehicleGroup.getCount();
+        String groupName = vehicleGroup.getGroup();
+        Group group = groups.get(groupName);
+        if (group != null && vehicleCount > 0)
+        {
+          Movements movements = distributor.getMovements(vehicleCount, group);
+          vehicleGroup.setMovements(movements);
+        }
+      }
       setModified(true);
     }
   }//GEN-LAST:event_groupsMenuItemActionPerformed

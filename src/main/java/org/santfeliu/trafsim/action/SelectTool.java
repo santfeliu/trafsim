@@ -54,6 +54,7 @@ import org.santfeliu.trafsim.Locations.Location;
 import org.santfeliu.trafsim.MapViewer;
 import org.santfeliu.trafsim.MapViewer.Painter;
 import org.santfeliu.trafsim.MapViewer.Selection;
+import org.santfeliu.trafsim.Movements;
 import org.santfeliu.trafsim.PickInfo;
 import org.santfeliu.trafsim.Projector;
 import org.santfeliu.trafsim.RoadGraph;
@@ -188,13 +189,14 @@ public class SelectTool extends Tool
           new VehicleGroupDialog(trafficSimulator, true);
         dialog.setCount(vehicleGroup.getCount());
         dialog.setGroup(vehicleGroup.getGroup());
+        dialog.setMovements(vehicleGroup.getMovements());
         if (dialog.showDialog())
         {
           List<VehicleGroup> vehicleGroups = getSelectedVehicleGroups();
           getUndoManager().addEdit(new UndoVehicleGroups(vehicleGroups,
-            dialog.getCount(), dialog.getGroup()));
+            dialog.getCount(), dialog.getGroup(), dialog.getMovements()));
           changeVehicleGroups(vehicleGroups,
-            dialog.getCount(), dialog.getGroup());
+            dialog.getCount(), dialog.getGroup(), dialog.getMovements());
         }
       }
     }
@@ -340,12 +342,13 @@ public class SelectTool extends Tool
   }
 
   private void changeVehicleGroups(List<VehicleGroup> vehicleGroups,
-    int count, String group)
+    int count, String group, Movements movements)
   {
     for (VehicleGroup vehicleGroup : vehicleGroups)
     {
       vehicleGroup.setCount(count);
       vehicleGroup.setGroup(group);
+      vehicleGroup.setMovements(new Movements(movements));
     }
     getMapViewer().repaint();
     trafficSimulator.setModified(true);
@@ -448,18 +451,21 @@ public class SelectTool extends Tool
     private final List values;
     private final int count;
     private final String group;
+    private final Movements movements;
 
     private UndoVehicleGroups(List<VehicleGroup> vehicleGroups,
-      int count, String group)
+      int count, String group, Movements movements)
     {
       this.vehicleGroups = vehicleGroups;
       this.count = count;
       this.group = group;
-      this.values =  new ArrayList(vehicleGroups.size() * 2);
-      for (VehicleGroup edge : vehicleGroups)
+      this.movements = movements;
+      this.values =  new ArrayList(vehicleGroups.size() * 3);
+      for (VehicleGroup vehicleGroup : vehicleGroups)
       {
-        values.add(edge.getCount());
-        values.add(edge.getGroup());
+        values.add(vehicleGroup.getCount());
+        values.add(vehicleGroup.getGroup());
+        values.add(vehicleGroup.getMovements());
       }
     }
 
@@ -471,7 +477,8 @@ public class SelectTool extends Tool
       {
         vehicleGroup.setCount((int)values.get(i));
         vehicleGroup.setGroup((String)values.get(i + 1));
-        i += 2;
+        vehicleGroup.setMovements((Movements)values.get(i + 2));
+        i += 3;
       }
       getMapViewer().repaint();
       trafficSimulator.setModified(true);
@@ -480,7 +487,7 @@ public class SelectTool extends Tool
     @Override
     public void redo() throws CannotRedoException
     {
-      changeVehicleGroups(vehicleGroups, count, group);
+      changeVehicleGroups(vehicleGroups, count, group, movements);
     }
 
     @Override

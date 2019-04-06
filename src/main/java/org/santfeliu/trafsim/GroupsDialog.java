@@ -47,6 +47,7 @@ import org.santfeliu.trafsim.Group.Journey;
 public class GroupsDialog extends javax.swing.JDialog
 {
   private boolean accepted;
+  private static final String GROUP_TAG = "---";
 
   /**
    * Creates new form GroupSetupDialog
@@ -59,7 +60,6 @@ public class GroupsDialog extends javax.swing.JDialog
 
   public boolean showDialog()
   {
-    setSize(400, 500);
     setLocationRelativeTo(getParent());
     setVisible(true);
     return accepted;
@@ -84,7 +84,7 @@ public class GroupsDialog extends javax.swing.JDialog
     {
       if (!group.getJourneys().isEmpty())
       {
-        buffer.append("group ");
+        buffer.append(GROUP_TAG + " ");
         buffer.append(group.getName());
         buffer.append("\n");
         ArrayList<Journey> journeys = new ArrayList<Journey>();
@@ -101,7 +101,6 @@ public class GroupsDialog extends javax.swing.JDialog
         });
         for (Journey journey : journeys)
         {
-          buffer.append("location\t");
           buffer.append(journey.getLocationName());
           buffer.append("\t");
           buffer.append(journey.getFactor());
@@ -128,10 +127,10 @@ public class GroupsDialog extends javax.swing.JDialog
       {
         StringTokenizer tokenizer = new StringTokenizer(line, " \t;");
         int numTokens = tokenizer.countTokens();
-        if (numTokens > 0)
+        if (numTokens > 1)
         {
-          String cmd = tokenizer.nextToken();
-          if (cmd.equals("group") && numTokens > 1)
+          String first = tokenizer.nextToken();
+          if (first.equals(GROUP_TAG))
           {
             String groupName = tokenizer.nextToken();
             group = groups.get(groupName);
@@ -141,9 +140,9 @@ public class GroupsDialog extends javax.swing.JDialog
               groups.put(groupName, group);
             }
           }
-          else if (cmd.equals("location") && numTokens > 2)
+          else
           {
-            String locationName = tokenizer.nextToken();
+            String locationName = first;
             double factor = Double.parseDouble(tokenizer.nextToken());
             group.addJourney(locationName, factor);
           }
@@ -178,6 +177,7 @@ public class GroupsDialog extends javax.swing.JDialog
     setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
     java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("org/santfeliu/trafsim/resources/TrafficSimulator"); // NOI18N
     setTitle(bundle.getString("dialog.groups.title")); // NOI18N
+    setPreferredSize(new java.awt.Dimension(300, 400));
 
     centerPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(4, 4, 4, 4));
     centerPanel.setLayout(new java.awt.BorderLayout());

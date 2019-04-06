@@ -41,6 +41,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.santfeliu.trafsim.GenericLayer;
 import org.santfeliu.trafsim.Group;
 import org.santfeliu.trafsim.Locations;
+import org.santfeliu.trafsim.Movements;
 import org.santfeliu.trafsim.RoadGraph;
 import org.santfeliu.trafsim.Simulation;
 import org.santfeliu.trafsim.Vehicles;
@@ -146,9 +147,12 @@ public class SimulationReader
           {
             Element fromElement = (Element)fromList.item(j);
             String locationName = fromElement.getAttribute("name");
-            if (locationName == null) locationName = "???";
-            double factor = Double.parseDouble(fromElement.getAttribute("factor"));
-            group.addJourney(locationName, factor);
+            if (locationName != null)
+            {
+              double factor =
+                Double.parseDouble(fromElement.getAttribute("factor"));
+              group.addJourney(locationName, factor);
+            }
           }
         }
       }
@@ -186,7 +190,29 @@ public class SimulationReader
           Point point = getPoint(pointElement);
           int count = getInteger(vehicleElement, "count", 1);
           String group = getString(vehicleElement, "group");
-          vehicles.newVehicleGroup(point, count, group).add();
+          Element movementsElement = getElement(vehicleElement, "movements");
+          Movements movements = null;
+          if (movementsElement != null)
+          {
+            movements = new Movements();
+            NodeList locationList =
+              movementsElement.getElementsByTagName("location");
+            for (int j = 0; j < locationList.getLength(); j++)
+            {
+              Element locationElement = (Element)locationList.item(j);
+              String locationName = locationElement.getAttribute("name");
+              if (locationName != null)
+              {
+                int journeyCount =
+                  Integer.parseInt(locationElement.getAttribute("count"));
+                if (journeyCount > 0)
+                {
+                  movements.put(locationName, journeyCount);
+                }
+              }
+            }
+          }
+          vehicles.newVehicleGroup(point, count, group, movements).add();
         }
       }
     }
