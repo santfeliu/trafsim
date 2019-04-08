@@ -212,18 +212,20 @@ public class SimulationWriter extends XMLWriter
     writeText(vehicleGroup.getGroup());
     endTag("group");
 
-    startTag("movements");
     Movements movements = vehicleGroup.getMovements();
-    Set<Map.Entry<String, Integer>> entrySet = movements.entrySet();
-    for (Map.Entry<String, Integer> entry : entrySet)
+    if (movements != null)
     {
-      startTag("location");
-      writeAttribute("name", entry.getKey());
-      writeAttribute("count", entry.getValue());
-      endTag("location");
+      startTag("movements");
+      Set<Map.Entry<String, Integer>> entrySet = movements.entrySet();
+      for (Map.Entry<String, Integer> entry : entrySet)
+      {
+        startTag("location");
+        writeAttribute("name", entry.getKey());
+        writeAttribute("count", entry.getValue());
+        endTag("location");
+      }
+      endTag("movements");
     }
-    endTag("movements");
-
     endTag("vehicle-group");
   }
 

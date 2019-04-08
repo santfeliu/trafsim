@@ -160,42 +160,44 @@ public class RouteVehiclesTool extends Tool implements Painter
       while (vehicleGroupIndex < vehicleGroupCount && !abort)
       {
         VehicleGroup vehicleGroup = vehicles.getVehicleGroup(vehicleGroupIndex);
-        Point3d origin = vehicleGroup.getPoint().getPosition();
         Movements movements = vehicleGroup.getMovements();
-        routeFinder.clear();
-        routeFinder.setOrigin(origin, Double.POSITIVE_INFINITY);
-
-        Set<String> locationNames = movements.keySet();
-        Iterator<String> miter = locationNames.iterator();
-        while (miter.hasNext() && !abort)
+        if (movements != null)
         {
-          String locationName = miter.next();
-          Location location = locations.getLocation(locationName);
-          if (location != null && location.isDestination())
+          Point3d origin = vehicleGroup.getPoint().getPosition();
+          routeFinder.clear();
+          routeFinder.setOrigin(origin, Double.POSITIVE_INFINITY);
+          Set<String> locationNames = movements.keySet();
+          Iterator<String> miter = locationNames.iterator();
+          while (miter.hasNext() && !abort)
           {
-            Point3d destination = location.getPoint().getPosition();
-            routeFinder.setDestination(destination, Double.POSITIVE_INFINITY);
-            Route route = routeFinder.getRoute();
-            int journeyCount = movements.get(locationName);
-            VehicleGroup.Indicators vehicleInd = vehicleGroup.getIndicators();
-            vehicleInd.journeyCount += journeyCount;
-            if (route.isEmpty())
+            String locationName = miter.next();
+            Location location = locations.getLocation(locationName);
+            if (location != null && location.isDestination())
             {
-              // unrouted journey
-              vehicleInd.unroutedCount += journeyCount;
-            }
-            else
-            {
-              // routed journey
-              vehicleInd.routedCount += journeyCount;
-              vehicleInd.distance += route.getLength() * journeyCount;
-              vehicleInd.time += routeMeter.getTime(route) * journeyCount;
-              for (Section section : route.getSections())
+              Point3d destination = location.getPoint().getPosition();
+              routeFinder.setDestination(destination, Double.POSITIVE_INFINITY);
+              Route route = routeFinder.getRoute();
+              int journeyCount = movements.get(locationName);
+              VehicleGroup.Indicators vehicleInd = vehicleGroup.getIndicators();
+              vehicleInd.journeyCount += journeyCount;
+              if (route.isEmpty())
               {
-                Edge edge = section.getEdge();
-                Edge.Indicators edgeInd = edge.getIndicators();
-                edgeInd.vehicleCount += journeyCount;
-                indicators.update(edge);
+                // unrouted journey
+                vehicleInd.unroutedCount += journeyCount;
+              }
+              else
+              {
+                // routed journey
+                vehicleInd.routedCount += journeyCount;
+                vehicleInd.distance += route.getLength() * journeyCount;
+                vehicleInd.time += routeMeter.getTime(route) * journeyCount;
+                for (Section section : route.getSections())
+                {
+                  Edge edge = section.getEdge();
+                  Edge.Indicators edgeInd = edge.getIndicators();
+                  edgeInd.vehicleCount += journeyCount;
+                  indicators.update(edge);
+                }
               }
             }
           }
