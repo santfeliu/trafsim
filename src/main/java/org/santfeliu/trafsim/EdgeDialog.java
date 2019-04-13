@@ -90,6 +90,23 @@ public class EdgeDialog extends javax.swing.JDialog
     }
   }
 
+  public void setDelay(int delay)
+  {
+    delayTextField.setText(String.valueOf(delay));
+  }
+
+  public int getDelay()
+  {
+    try
+    {
+      return Integer.parseInt(delayTextField.getText());
+    }
+    catch (NumberFormatException ex)
+    {
+      return 0;
+    }
+  }
+
 
   /**
    * This method is called from within the constructor to initialize the form.
@@ -107,6 +124,8 @@ public class EdgeDialog extends javax.swing.JDialog
     speedTextField = new javax.swing.JTextField();
     lanesLabel = new javax.swing.JLabel();
     lanesTextField = new javax.swing.JTextField();
+    delayLabel = new javax.swing.JLabel();
+    delayTextField = new javax.swing.JTextField();
     southPanel = new javax.swing.JPanel();
     okButton = new javax.swing.JButton();
     cancelButton = new javax.swing.JButton();
@@ -142,6 +161,20 @@ public class EdgeDialog extends javax.swing.JDialog
     gridBagConstraints.weightx = 1.0;
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
     centerPanel.add(lanesTextField, gridBagConstraints);
+
+    delayLabel.setText(bundle.getString("dialog.edge.delay")); // NOI18N
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 0;
+    gridBagConstraints.gridy = 2;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
+    centerPanel.add(delayLabel, gridBagConstraints);
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 1;
+    gridBagConstraints.gridy = 2;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
+    centerPanel.add(delayTextField, gridBagConstraints);
 
     getContentPane().add(centerPanel, java.awt.BorderLayout.CENTER);
 
@@ -184,6 +217,8 @@ public class EdgeDialog extends javax.swing.JDialog
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JButton cancelButton;
   private javax.swing.JPanel centerPanel;
+  private javax.swing.JLabel delayLabel;
+  private javax.swing.JTextField delayTextField;
   private javax.swing.JLabel lanesLabel;
   private javax.swing.JTextField lanesTextField;
   private javax.swing.JButton okButton;

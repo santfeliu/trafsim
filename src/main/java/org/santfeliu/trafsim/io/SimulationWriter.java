@@ -156,6 +156,10 @@ public class SimulationWriter extends XMLWriter
     writeText(edge.getLanes());
     endTag("lanes");
 
+    startTag("delay");
+    writeText(edge.getDelay());
+    endTag("delay");
+
     endTag("edge");
   }
 

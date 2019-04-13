@@ -105,6 +105,8 @@ public class ImportDialog extends javax.swing.JDialog
     fill1Label = new javax.swing.JLabel();
     lanesLabel = new javax.swing.JLabel();
     lanesTextField = new javax.swing.JTextField();
+    delayLabel = new javax.swing.JLabel();
+    delayTextField = new javax.swing.JTextField();
     layerPanel = new javax.swing.JPanel();
     layerLabelLabel = new javax.swing.JLabel();
     layerLabelTextField = new javax.swing.JTextField();
@@ -310,6 +312,7 @@ public class ImportDialog extends javax.swing.JDialog
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 0;
     gridBagConstraints.gridy = 0;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.BASELINE_LEADING;
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
     graphPanel.add(speedLabel, gridBagConstraints);
@@ -331,6 +334,7 @@ public class ImportDialog extends javax.swing.JDialog
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 0;
     gridBagConstraints.gridy = 1;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.BASELINE_LEADING;
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
     graphPanel.add(lanesLabel, gridBagConstraints);
@@ -344,6 +348,24 @@ public class ImportDialog extends javax.swing.JDialog
     gridBagConstraints.anchor = java.awt.GridBagConstraints.BASELINE_LEADING;
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
     graphPanel.add(lanesTextField, gridBagConstraints);
+
+    delayLabel.setText(bundle.getString("dialog.import.delayField")); // NOI18N
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 0;
+    gridBagConstraints.gridy = 2;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.BASELINE_LEADING;
+    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
+    graphPanel.add(delayLabel, gridBagConstraints);
+
+    delayTextField.setText("DELAY");
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 1;
+    gridBagConstraints.gridy = 2;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.BASELINE_LEADING;
+    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
+    graphPanel.add(delayTextField, gridBagConstraints);
 
     toPanel.add(graphPanel, "Graph");
 
@@ -545,12 +567,13 @@ public class ImportDialog extends javax.swing.JDialog
           {
             int speed = 50;
             int lanes = 1;
+            int delay = 0;
             Object value = attributes.get(speedTextField.getText());
             if (value instanceof String)
             {
               try
               {
-                speed = Integer.parseInt(value.toString());
+                speed = Integer.parseInt((String)value);
               }
               catch (NumberFormatException ex)
               {
@@ -561,14 +584,25 @@ public class ImportDialog extends javax.swing.JDialog
             {
               try
               {
-                lanes = Integer.parseInt(value.toString());
+                lanes = Integer.parseInt((String)value);
+              }
+              catch (NumberFormatException ex)
+              {
+              }
+            }
+            value = attributes.get(delayTextField.getText());
+            if (value instanceof String)
+            {
+              try
+              {
+                delay = Integer.parseInt((String)value);
               }
               catch (NumberFormatException ex)
               {
               }
             }
             features.add(simulation.getRoadGraph().newEdge(
-              (LineString)geometry, speed, lanes));
+              (LineString)geometry, speed, lanes, delay));
           }
         };
       }
@@ -685,6 +719,8 @@ public class ImportDialog extends javax.swing.JDialog
   private javax.swing.JPanel centerPanel;
   private javax.swing.JLabel countLabel;
   private javax.swing.JTextField countTextField;
+  private javax.swing.JLabel delayLabel;
+  private javax.swing.JTextField delayTextField;
   private javax.swing.JPanel diskPanel;
   private javax.swing.JButton exploreButton;
   private javax.swing.JLabel fill1Label;

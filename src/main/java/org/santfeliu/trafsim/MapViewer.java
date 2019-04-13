@@ -554,22 +554,30 @@ public class MapViewer extends javax.swing.JPanel
       }
       else
       {
-        g.setStroke(new BasicStroke(edge.getLanes()));
+        g.setStroke(new BasicStroke(edge.getLanes(), 
+          BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
       }
       if (selection.contains(edge))
       {
         g.setColor(Color.BLUE);
-        g.drawLine(dp1.x, dp1.y, dp2.x, dp2.y);
-        paintArrows(g);
       }
-      else if (edgesVisible)
+      else
       {
-        g.setColor(Color.GREEN);
+        if (edge.getDelay() == 0)
+        {
+          g.setColor(Color.GREEN);
+        }
+        else
+        {
+          g.setColor(Color.ORANGE);
+        }
+      }
+      if (edgesVisible)
+      {
         g.drawLine(dp1.x, dp1.y, dp2.x, dp2.y);
         paintArrows(g);
       }
     }
-    g.setStroke(STROKE1);
   }
 
   protected void paintArrows(Graphics2D g)
@@ -583,9 +591,9 @@ public class MapViewer extends javax.swing.JPanel
       v.normalize();
       Vector2d vc1 = new Vector2d(-v.y, v.x);
       Vector2d vc2 = new Vector2d(v.y, -v.x);
-      v.scale(5);
-      vc1.scale(3);
-      vc2.scale(3);
+      v.scale(6);
+      vc1.scale(4);
+      vc2.scale(4);
       g.drawLine((int)(xm + v.x), (int)(ym + v.y),
          (int)(xm + vc1.x), (int)(ym + vc1.y));
       g.drawLine((int)(xm + v.x), (int)(ym + v.y),

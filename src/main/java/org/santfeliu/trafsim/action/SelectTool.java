@@ -155,12 +155,14 @@ public class SelectTool extends Tool
         EdgeDialog dialog = new EdgeDialog(trafficSimulator, true);
         dialog.setSpeed(edge.getSpeed());
         dialog.setLanes(edge.getLanes());
+        dialog.setDelay(edge.getDelay());
         if (dialog.showDialog())
         {
           List<Edge> edges = getSelectedEdges();
-          getUndoManager().addEdit(
-            new UndoEdges(edges, dialog.getSpeed(), dialog.getLanes()));
-          changeEdges(edges, dialog.getSpeed(), dialog.getLanes());
+          getUndoManager().addEdit(new UndoEdges(edges,
+            dialog.getSpeed(), dialog.getLanes(), dialog.getDelay()));
+          changeEdges(edges,
+            dialog.getSpeed(), dialog.getLanes(), dialog.getDelay());
         }
       }
       else if (feature instanceof Location)
@@ -330,12 +332,13 @@ public class SelectTool extends Tool
     }
   }
 
-  private void changeEdges(List<Edge> edges, int speed, int lanes)
+  private void changeEdges(List<Edge> edges, int speed, int lanes, int delay)
   {
     for (Edge edge : edges)
     {
       edge.setSpeed(speed);
       edge.setLanes(lanes);
+      edge.setDelay(delay);
     }
     getMapViewer().repaint();
     trafficSimulator.setModified(true);
@@ -360,17 +363,20 @@ public class SelectTool extends Tool
     private final List values;
     private final int speed;
     private final int lanes;
+    private final int delay;
 
-    private UndoEdges(List<Edge> edges, int speed, int lanes)
+    private UndoEdges(List<Edge> edges, int speed, int lanes, int delay)
     {
       this.edges = edges;
       this.speed = speed;
       this.lanes = lanes;
-      this.values =  new ArrayList(edges.size() * 2);
+      this.delay = delay;
+      this.values =  new ArrayList(edges.size() * 3);
       for (Edge edge : edges)
       {
         values.add(edge.getSpeed());
         values.add(edge.getLanes());
+        values.add(edge.getDelay());
       }
     }
 
@@ -382,7 +388,8 @@ public class SelectTool extends Tool
       {
         edge.setSpeed((int)values.get(i));
         edge.setLanes((int)values.get(i + 1));
-        i += 2;
+        edge.setDelay((int)values.get(i + 2));
+        i += 3;
       }
       getMapViewer().repaint();
       trafficSimulator.setModified(true);
@@ -391,7 +398,7 @@ public class SelectTool extends Tool
     @Override
     public void redo() throws CannotRedoException
     {
-      changeEdges(edges, speed, lanes);
+      changeEdges(edges, speed, lanes, delay);
     }
 
     @Override

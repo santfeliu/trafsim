@@ -129,7 +129,7 @@ public class DrawEdgeTool extends Tool
           {
             RoadGraph roadGraph = mapViewer.getSimulation().getRoadGraph();
             Edge edge = roadGraph.newEdge(new LineString(vertices),
-              dialog.getSpeed(), dialog.getLanes());
+              dialog.getSpeed(), dialog.getLanes(), dialog.getDelay());
             edge.add();
             trafficSimulator.setModified(true);
             getUndoManager().addEdit(new Undo(edge));

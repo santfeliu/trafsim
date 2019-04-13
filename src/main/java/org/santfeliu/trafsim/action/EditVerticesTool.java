@@ -394,11 +394,11 @@ public class EditVerticesTool extends Tool implements
       RoadGraph roadGraph = mapViewer.getSimulation().getRoadGraph();
 
       Edge edge1 = roadGraph.newEdge(new LineString(vertices1),
-        edge.getSpeed(), edge.getLanes());
+        edge.getSpeed(), edge.getLanes(), edge.getDelay());
       edge1.add();
 
       Edge edge2 = roadGraph.newEdge(new LineString(vertices2),
-        edge.getSpeed(), edge.getLanes());
+        edge.getSpeed(), edge.getLanes(), edge.getDelay());
       edge2.add();
 
       selection.add(edge1);

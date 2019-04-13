@@ -98,14 +98,16 @@ public class RoadGraph extends Layer<Edge>
     Node targetNode;
     LineString lineString;
     int speed; // Km/h
-    int lanes;
+    int lanes; // number of lanes
+    int delay; // seconds
     Indicators indicators;
 
-    Edge(LineString lineString, int speed, int lanes)
+    Edge(LineString lineString, int speed, int lanes, int delay)
     {
       this.lineString = lineString;
       this.speed = speed;
       this.lanes = lanes;
+      this.delay = delay;
     }
 
     public LineString getLineString()
@@ -141,6 +143,16 @@ public class RoadGraph extends Layer<Edge>
     public int getLanes()
     {
       return lanes;
+    }
+
+    public int getDelay()
+    {
+      return delay;
+    }
+
+    public void setDelay(int delay)
+    {
+      this.delay = delay;
     }
 
     public void reverse()
@@ -230,7 +242,7 @@ public class RoadGraph extends Layer<Edge>
 
     public Edge duplicate()
     {
-      return new Edge(lineString.duplicate(), speed, lanes);
+      return new Edge(lineString.duplicate(), speed, lanes, delay);
     }
 
     @Override
@@ -238,6 +250,7 @@ public class RoadGraph extends Layer<Edge>
     {
       attributes.put("SPEED", speed);
       attributes.put("LANES", lanes);
+      attributes.put("DELAY", delay);
     }
 
     public Indicators getIndicators()
@@ -327,9 +340,9 @@ public class RoadGraph extends Layer<Edge>
     }
   }
 
-  public Edge newEdge(LineString lineString, int speed, int lanes)
+  public Edge newEdge(LineString lineString, int speed, int lanes, int delay)
   {
-    return new Edge(lineString, speed, lanes);
+    return new Edge(lineString, speed, lanes, delay);
   }
 
   public Collection<Node> getNodes()

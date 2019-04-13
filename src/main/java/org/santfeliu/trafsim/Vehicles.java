@@ -207,8 +207,8 @@ public class Vehicles extends Layer<VehicleGroup>
       public int journeyCount;
       public int routedCount;
       public int unroutedCount;
-      public double distance;
-      public double time;
+      public double distance; // meters
+      public double time; // hours
 
       public void reset()
       {
