@@ -58,7 +58,7 @@ import org.santfeliu.trafsim.geom.Polygon;
  */
 public class SimulationWriter extends XMLWriter
 {
-  private static final String VERSION = "1";
+  private static final String VERSION = "1.1";
 
   public SimulationWriter(OutputStream os) throws IOException
   {
@@ -83,6 +83,10 @@ public class SimulationWriter extends XMLWriter
       startTag("srs");
       writeText(simulation.getSrsName());
       endTag("srs");
+
+      startTag("duration");
+      writeText(simulation.getDuration());
+      endTag("duration");
 
       startTag("road-graph");
       RoadGraph roadGraph = simulation.getRoadGraph();
@@ -156,9 +160,9 @@ public class SimulationWriter extends XMLWriter
     writeText(edge.getLanes());
     endTag("lanes");
 
-    startTag("delay");
-    writeText(edge.getDelay());
-    endTag("delay");
+    startTag("stop");
+    writeText(edge.getStopFactor());
+    endTag("stop");
 
     endTag("edge");
   }

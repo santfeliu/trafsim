@@ -105,8 +105,8 @@ public class ImportDialog extends javax.swing.JDialog
     fill1Label = new javax.swing.JLabel();
     lanesLabel = new javax.swing.JLabel();
     lanesTextField = new javax.swing.JTextField();
-    delayLabel = new javax.swing.JLabel();
-    delayTextField = new javax.swing.JTextField();
+    stopFactorLabel = new javax.swing.JLabel();
+    stopFactorTextField = new javax.swing.JTextField();
     layerPanel = new javax.swing.JPanel();
     layerLabelLabel = new javax.swing.JLabel();
     layerLabelTextField = new javax.swing.JTextField();
@@ -349,23 +349,23 @@ public class ImportDialog extends javax.swing.JDialog
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
     graphPanel.add(lanesTextField, gridBagConstraints);
 
-    delayLabel.setText(bundle.getString("dialog.import.delayField")); // NOI18N
+    stopFactorLabel.setText(bundle.getString("dialog.import.stopField")); // NOI18N
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 0;
     gridBagConstraints.gridy = 2;
     gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.BASELINE_LEADING;
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    graphPanel.add(delayLabel, gridBagConstraints);
+    graphPanel.add(stopFactorLabel, gridBagConstraints);
 
-    delayTextField.setText("DELAY");
+    stopFactorTextField.setText("STOP");
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 1;
     gridBagConstraints.gridy = 2;
     gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
     gridBagConstraints.anchor = java.awt.GridBagConstraints.BASELINE_LEADING;
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
-    graphPanel.add(delayTextField, gridBagConstraints);
+    graphPanel.add(stopFactorTextField, gridBagConstraints);
 
     toPanel.add(graphPanel, "Graph");
 
@@ -567,7 +567,7 @@ public class ImportDialog extends javax.swing.JDialog
           {
             int speed = 50;
             int lanes = 1;
-            int delay = 0;
+            double stopFactor = 0;
             Object value = attributes.get(speedTextField.getText());
             if (value instanceof String)
             {
@@ -590,19 +590,19 @@ public class ImportDialog extends javax.swing.JDialog
               {
               }
             }
-            value = attributes.get(delayTextField.getText());
+            value = attributes.get(stopFactorTextField.getText());
             if (value instanceof String)
             {
               try
               {
-                delay = Integer.parseInt((String)value);
+                stopFactor = Double.parseDouble((String)value);
               }
               catch (NumberFormatException ex)
               {
               }
             }
             features.add(simulation.getRoadGraph().newEdge(
-              (LineString)geometry, speed, lanes, delay));
+              (LineString)geometry, speed, lanes, stopFactor));
           }
         };
       }
@@ -719,8 +719,6 @@ public class ImportDialog extends javax.swing.JDialog
   private javax.swing.JPanel centerPanel;
   private javax.swing.JLabel countLabel;
   private javax.swing.JTextField countTextField;
-  private javax.swing.JLabel delayLabel;
-  private javax.swing.JTextField delayTextField;
   private javax.swing.JPanel diskPanel;
   private javax.swing.JButton exploreButton;
   private javax.swing.JLabel fill1Label;
@@ -751,6 +749,8 @@ public class ImportDialog extends javax.swing.JDialog
   private javax.swing.JPanel southPanel;
   private javax.swing.JLabel speedLabel;
   private javax.swing.JTextField speedTextField;
+  private javax.swing.JLabel stopFactorLabel;
+  private javax.swing.JTextField stopFactorTextField;
   private javax.swing.JComboBox<String> toComboBox;
   private javax.swing.JLabel toLabel;
   private javax.swing.JPanel toPanel;

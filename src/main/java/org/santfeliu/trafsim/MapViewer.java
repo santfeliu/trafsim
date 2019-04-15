@@ -69,6 +69,7 @@ public class MapViewer extends javax.swing.JPanel
   private static final Color DEAD_END_COLOR = Color.RED;
   private static final Color ORIGINS_COLOR = Color.MAGENTA;
   private static final BasicStroke STROKE1 = new BasicStroke(1f);
+  private static final BasicStroke STROKE3 = new BasicStroke(3f);
   private static final BasicStroke STROKE5 =
     new BasicStroke(5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
   private static final int PANEL_WIDTH = 230;
@@ -89,6 +90,7 @@ public class MapViewer extends javax.swing.JPanel
   private boolean deadEndsVisible = false;
   private boolean originsVisible = false;
   private boolean indicatorsVisible = false;
+  private boolean congestionVisible = false;
 
   /**
    * Creates new form MapViewer
@@ -234,6 +236,17 @@ public class MapViewer extends javax.swing.JPanel
     repaint();
   }
 
+  public boolean isCongestionVisible()
+  {
+    return congestionVisible;
+  }
+
+  public void setCongestionVisible(boolean congestionVisible)
+  {
+    this.congestionVisible = congestionVisible;
+    repaint();
+  }
+
   public Painter getPainter()
   {
     return painter;
@@ -299,7 +312,7 @@ public class MapViewer extends javax.swing.JPanel
   {
     return getClass().getName();
   }
-  
+
   @Override
   public void paintComponent(Graphics g)
   {
@@ -464,16 +477,22 @@ public class MapViewer extends javax.swing.JPanel
         Edge.Indicators eInd = edge.getIndicators();
         g.setColor(new Color(255, 255, 230));
         g.setStroke(new BasicStroke(1));
-        g.fillRoundRect(x, 170, PANEL_WIDTH, 70, 6, 6);
+        g.fillRoundRect(x, 170, PANEL_WIDTH, 130, 6, 6);
         g.setColor(Color.ORANGE);
-        g.drawRoundRect(x, 170, PANEL_WIDTH, 70, 6, 6);
+        g.drawRoundRect(x, 170, PANEL_WIDTH, 130, 6, 6);
         g.setColor(Color.BLACK);
         g.drawString(trafficSimulator.getMessage("indicator.length") +
           ": " + df2.format(edge.lineString.getLength()) + " m", x2, 190);
-        g.drawString(trafficSimulator.getMessage("indicator.vehicleCount") +
-          ": " + df0.format(eInd.vehicleCount), x2, 210);
+        g.drawString(trafficSimulator.getMessage("indicator.actualSpeed") +
+          ": " + df2.format(edge.getActualSpeed()) + " Km/h", x2, 210);
+        g.drawString(trafficSimulator.getMessage("indicator.travelTime") +
+          ": " + df2.format(60 * eInd.getTravelTime()) + " min", x2, 230);
         g.drawString(trafficSimulator.getMessage("indicator.capacity") +
-          ": " + df2.format(eInd.getCapacity()) + " vh / min", x2, 230);
+          ": " + df2.format(eInd.getCapacity()) + " vh / h", x2, 250);
+        g.drawString(trafficSimulator.getMessage("indicator.vehicleCount") +
+          ": " + df0.format(eInd.vehicleCount), x2, 270);
+        g.drawString(trafficSimulator.getMessage("indicator.requiredTime") +
+          ": " + df2.format(eInd.getVehiclesRequiredTime()) + " h", x2, 290);
       }
       else if (feature instanceof VehicleGroup)
       {
@@ -554,7 +573,7 @@ public class MapViewer extends javax.swing.JPanel
       }
       else
       {
-        g.setStroke(new BasicStroke(edge.getLanes(), 
+        g.setStroke(new BasicStroke(edge.getLanes(),
           BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
       }
       if (selection.contains(edge))
@@ -563,13 +582,20 @@ public class MapViewer extends javax.swing.JPanel
       }
       else
       {
-        if (edge.getDelay() == 0)
+        if (congestionVisible && simulation.getDuration() > 0.0 &&
+          edge.getIndicators().getVehiclesRequiredTime() >
+          simulation.getDuration())
         {
-          g.setColor(Color.GREEN);
+          g.setColor(Color.BLACK);
+          g.setStroke(STROKE3);
+        }
+        else if (edge.getStopFactor() > 0.0)
+        {
+          g.setColor(Color.ORANGE);
         }
         else
         {
-          g.setColor(Color.ORANGE);
+          g.setColor(Color.GREEN);
         }
       }
       if (edgesVisible)

@@ -81,6 +81,18 @@ public class SimulationReader
       {
         simulation.setSrsName(srsName);
       }
+      String duration = getString(root, "duration");
+      if (duration != null)
+      {
+        try
+        {
+          simulation.setDuration(Double.parseDouble(duration));
+        }
+        catch (NumberFormatException ex)
+        {
+          // ignore
+        }
+      }
 
       Element graphElement = getElement(root, "road-graph");
       if (graphElement != null)
@@ -94,8 +106,8 @@ public class SimulationReader
           LineString lineString = getLineString(lineStringElement);
           int speed = getInteger(edgeElement, "speed", 50);
           int lanes = getInteger(edgeElement, "lanes", 1);
-          int delay = getInteger(edgeElement, "delay", 0);
-          roadGraph.newEdge(lineString, speed, lanes, delay).add();
+          double stopFactor = getDouble(edgeElement, "stop", 0.0);
+          roadGraph.newEdge(lineString, speed, lanes, stopFactor).add();
         }
       }
 

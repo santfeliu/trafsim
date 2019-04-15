@@ -363,10 +363,10 @@
                     </Constraint>
                   </Constraints>
                 </Component>
-                <Component class="javax.swing.JLabel" name="delayLabel">
+                <Component class="javax.swing.JLabel" name="stopFactorLabel">
                   <Properties>
                     <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-                      <ResourceString bundle="org/santfeliu/trafsim/resources/TrafficSimulator.properties" key="dialog.import.delayField" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
+                      <ResourceString bundle="org/santfeliu/trafsim/resources/TrafficSimulator.properties" key="dialog.import.stopField" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
                     </Property>
                   </Properties>
                   <Constraints>
@@ -375,9 +375,9 @@
                     </Constraint>
                   </Constraints>
                 </Component>
-                <Component class="javax.swing.JTextField" name="delayTextField">
+                <Component class="javax.swing.JTextField" name="stopFactorTextField">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="DELAY"/>
+                    <Property name="text" type="java.lang.String" value="STOP"/>
                   </Properties>
                   <Constraints>
                     <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout" value="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout$GridBagConstraintsDescription">

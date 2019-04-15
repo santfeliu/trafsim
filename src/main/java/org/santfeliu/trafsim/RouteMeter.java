@@ -40,10 +40,9 @@ import org.santfeliu.trafsim.Route.Section;
 public class RouteMeter
 {
   /**
-   *
-   * @param distance in meters
-   * @param speed in Km/h
-   * @return the time to travel distance in hours
+   * 
+   * @param route
+   * @return route length in meters 
    */
   public double getLength(Route route)
   {
@@ -68,8 +67,7 @@ public class RouteMeter
    */
   public double getTime(Edge edge)
   {
-    return getTime(edge.getLineString().getLength(), edge.getSpeed()) +
-      edge.getDelay() / 3600.0;
+    return getTime(edge.getLineString().getLength(), edge.getActualSpeed());
   }
 
   /**
@@ -80,7 +78,7 @@ public class RouteMeter
   public double getTime(Section section)
   {
     return getTime(section.getLineString().getLength(),
-      section.getEdge().getSpeed()) + section.getEdge().getDelay() / 3600.0;
+      section.getEdge().getActualSpeed());
   }
 
   /**

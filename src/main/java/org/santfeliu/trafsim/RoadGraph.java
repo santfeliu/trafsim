@@ -99,15 +99,15 @@ public class RoadGraph extends Layer<Edge>
     LineString lineString;
     int speed; // Km/h
     int lanes; // number of lanes
-    int delay; // seconds
+    double stopFactor; // seconds
     Indicators indicators;
 
-    Edge(LineString lineString, int speed, int lanes, int delay)
+    Edge(LineString lineString, int speed, int lanes, double stopFactor)
     {
       this.lineString = lineString;
       this.speed = speed;
       this.lanes = lanes;
-      this.delay = delay;
+      this.stopFactor = stopFactor;
     }
 
     public LineString getLineString()
@@ -145,14 +145,23 @@ public class RoadGraph extends Layer<Edge>
       return lanes;
     }
 
-    public int getDelay()
+    public double getStopFactor()
     {
-      return delay;
+      return stopFactor;
     }
 
-    public void setDelay(int delay)
+    public void setStopFactor(double stopFactor)
     {
-      this.delay = delay;
+      this.stopFactor = stopFactor;
+    }
+
+    /**
+     *
+     * @return actual speed in Km/h
+     */
+    public double getActualSpeed()
+    {
+      return speed * (1 - stopFactor);
     }
 
     public void reverse()
@@ -242,7 +251,7 @@ public class RoadGraph extends Layer<Edge>
 
     public Edge duplicate()
     {
-      return new Edge(lineString.duplicate(), speed, lanes, delay);
+      return new Edge(lineString.duplicate(), speed, lanes, stopFactor);
     }
 
     @Override
@@ -250,7 +259,7 @@ public class RoadGraph extends Layer<Edge>
     {
       attributes.put("SPEED", speed);
       attributes.put("LANES", lanes);
-      attributes.put("DELAY", delay);
+      attributes.put("STOP", stopFactor);
     }
 
     public Indicators getIndicators()
@@ -326,11 +335,33 @@ public class RoadGraph extends Layer<Edge>
       static final double VEHICLE_SEPARATION = 2; // meters
       public int vehicleCount;
 
-      /* vehicles / minute */
+      /**
+       *
+       * @return time in hours a vehicle takes to travel through this edge
+       */
+      public double getTravelTime()
+      {
+        return getLineString().getLength() / (1000 * getActualSpeed());
+      }
+
+      /**
+       *
+       * @return vehicles / hour
+       */
       public double getCapacity()
       {
-        return lanes * (1000 * speed) /
-          (60.0 * (VEHICLE_LENGTH + VEHICLE_SEPARATION));
+        return lanes * 1000 * getActualSpeed() /
+          (VEHICLE_LENGTH + VEHICLE_SEPARATION);
+      }
+
+      /**
+       *
+       * @return hours to move all vehicles through this edge
+       */
+      public double getVehiclesRequiredTime()
+      {
+        if (vehicleCount == 0) return 0;
+        return vehicleCount / getCapacity();
       }
 
       public void reset()
@@ -340,9 +371,10 @@ public class RoadGraph extends Layer<Edge>
     }
   }
 
-  public Edge newEdge(LineString lineString, int speed, int lanes, int delay)
+  public Edge newEdge(LineString lineString, int speed, int lanes,
+    double stopFactor)
   {
-    return new Edge(lineString, speed, lanes, delay);
+    return new Edge(lineString, speed, lanes, stopFactor);
   }
 
   public Collection<Node> getNodes()

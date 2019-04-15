@@ -76,6 +76,23 @@ public class PropertiesDialog extends javax.swing.JDialog
     return srsTextField.getText();
   }
 
+  public double getDuration()
+  {
+    try
+    {
+      return Double.parseDouble(durationTextField.getText());
+    }
+    catch (NumberFormatException ex)
+    {
+      return 0.0;
+    }
+  }
+
+  public void setDuration(double duration)
+  {
+    durationTextField.setText(String.valueOf(duration));
+  }
+
 
   /**
    * This method is called from within the constructor to initialize the form.
@@ -93,6 +110,8 @@ public class PropertiesDialog extends javax.swing.JDialog
     titleTextField = new javax.swing.JTextField();
     srsLabel = new javax.swing.JLabel();
     srsTextField = new javax.swing.JTextField();
+    durationLabel = new javax.swing.JLabel();
+    durationTextField = new javax.swing.JTextField();
     southPanel = new javax.swing.JPanel();
     okButton = new javax.swing.JButton();
     cancelButton = new javax.swing.JButton();
@@ -100,13 +119,14 @@ public class PropertiesDialog extends javax.swing.JDialog
     setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
     java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("org/santfeliu/trafsim/resources/TrafficSimulator"); // NOI18N
     setTitle(bundle.getString("dialog.simulationProperties.title")); // NOI18N
-    setPreferredSize(new java.awt.Dimension(220, 139));
+    setPreferredSize(new java.awt.Dimension(250, 180));
 
     centerPanel.setPreferredSize(new java.awt.Dimension(200, 100));
     centerPanel.setLayout(new java.awt.GridBagLayout());
 
     titleLabel.setText(bundle.getString("dialog.simulationProperties.titleLabel")); // NOI18N
     gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
     centerPanel.add(titleLabel, gridBagConstraints);
     gridBagConstraints = new java.awt.GridBagConstraints();
@@ -129,6 +149,19 @@ public class PropertiesDialog extends javax.swing.JDialog
     gridBagConstraints.weightx = 1.0;
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
     centerPanel.add(srsTextField, gridBagConstraints);
+
+    durationLabel.setText(bundle.getString("dialog.simulationProperties.duration")); // NOI18N
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 0;
+    gridBagConstraints.gridy = 2;
+    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
+    centerPanel.add(durationLabel, gridBagConstraints);
+    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints.gridx = 1;
+    gridBagConstraints.gridy = 2;
+    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+    gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
+    centerPanel.add(durationTextField, gridBagConstraints);
 
     getContentPane().add(centerPanel, java.awt.BorderLayout.CENTER);
 
@@ -171,6 +204,8 @@ public class PropertiesDialog extends javax.swing.JDialog
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JButton cancelButton;
   private javax.swing.JPanel centerPanel;
+  private javax.swing.JLabel durationLabel;
+  private javax.swing.JTextField durationTextField;
   private javax.swing.JButton okButton;
   private javax.swing.JPanel southPanel;
   private javax.swing.JLabel srsLabel;

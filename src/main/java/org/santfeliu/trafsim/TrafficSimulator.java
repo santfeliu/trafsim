@@ -286,6 +286,7 @@ public class TrafficSimulator extends javax.swing.JFrame
     deadEndsCheckBoxMenuItem = new javax.swing.JCheckBoxMenuItem();
     originsCheckBoxMenuItem = new javax.swing.JCheckBoxMenuItem();
     indicatorsCheckBoxMenuItem = new javax.swing.JCheckBoxMenuItem();
+    congestionCheckBoxMenuItem = new javax.swing.JCheckBoxMenuItem();
     viewSeparator3 = new javax.swing.JPopupMenu.Separator();
     consoleMenuItem = new javax.swing.JMenuItem();
     toolsMenu = new javax.swing.JMenu();
@@ -598,6 +599,16 @@ public class TrafficSimulator extends javax.swing.JFrame
       }
     });
     viewMenu.add(indicatorsCheckBoxMenuItem);
+
+    congestionCheckBoxMenuItem.setText(bundle.getString("menu.congestionVisible")); // NOI18N
+    congestionCheckBoxMenuItem.addActionListener(new java.awt.event.ActionListener()
+    {
+      public void actionPerformed(java.awt.event.ActionEvent evt)
+      {
+        congestionCheckBoxMenuItemActionPerformed(evt);
+      }
+    });
+    viewMenu.add(congestionCheckBoxMenuItem);
     viewMenu.add(viewSeparator3);
 
     consoleMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, 0));
@@ -909,11 +920,13 @@ public class TrafficSimulator extends javax.swing.JFrame
     PropertiesDialog dialog = new PropertiesDialog(this, true);
     dialog.setSimulationTitle(simulation.getTitle());
     dialog.setSrsName(simulation.getSrsName());
+    dialog.setDuration(simulation.getDuration());
     dialog.setLocationRelativeTo(this);
     if (dialog.showDialog())
     {
       simulation.setTitle(dialog.getSimulationTitle());
       simulation.setSrsName(dialog.getSrsName());
+      simulation.setDuration(dialog.getDuration());
       mapViewer.repaint();
       setModified(true);
     }
@@ -972,6 +985,11 @@ public class TrafficSimulator extends javax.swing.JFrame
     }
     console.setVisible(true);
   }//GEN-LAST:event_consoleMenuItemActionPerformed
+
+  private void congestionCheckBoxMenuItemActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_congestionCheckBoxMenuItemActionPerformed
+  {//GEN-HEADEREND:event_congestionCheckBoxMenuItemActionPerformed
+    mapViewer.setCongestionVisible(congestionCheckBoxMenuItem.isSelected());
+  }//GEN-LAST:event_congestionCheckBoxMenuItemActionPerformed
 
   public class SimulatorUndoManager extends UndoManager
   {
@@ -1113,6 +1131,7 @@ public class TrafficSimulator extends javax.swing.JFrame
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JMenuItem aboutMenuItem;
   private javax.swing.JCheckBoxMenuItem baseLayersCheckBoxMenuItem;
+  private javax.swing.JCheckBoxMenuItem congestionCheckBoxMenuItem;
   private javax.swing.JMenuItem consoleMenuItem;
   private javax.swing.JCheckBoxMenuItem deadEndsCheckBoxMenuItem;
   private javax.swing.JMenuItem deleteMenuItem;
