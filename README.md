@@ -9,8 +9,9 @@ Each edge connects 2 nodes and represents a possible trajectory of a vehicle.
 The simulation requires 3 layers to work:
 
 * __Road graph__: contains the edges (trajectories) of the road network 
-represented as LineString (polylines) geometries. An edge has 2 attributes:
-the maximum speed (Km/h) and the number of lanes of the road.
+represented as LineString (polylines) geometries. An edge has 3 attributes:
+the maximum speed (Km/h), the number of lanes of the road and the stop factor, 
+that is the proportion of time (0..1) that vehicles are stopped at this edge.
 * __Vehicles__: the vehicles that are going to be moved in the simulation 
 represented as Point geometries. Each feature of this layer contains 2 
 attributes: the number of vehicles and the group it belongs to.
@@ -58,14 +59,25 @@ Once the simulation is completed, the following indicators are provided:
 
 In addition, for each edge, these indicators are also provided:
 
-* __Vehicle count__: the number of vehicles that pass through this edge.
 * __Length__: the length of this edge.
-* __Capacity__: the maximum capacity of this edge.
+* __Capacity__: the maximum capacity of this edge (vehicles per hour).
+* __Vehicle count__: the number of vehicles that pass through this edge.
+* __Required time__: the time it takes all the vehicles to cross that edge.
+
+The capacity of an edge is calculated according to this formula:
+
+    C = L * V * (1 - S) / DV
+
+where:
+
+* L = the number of lanes of the edge
+* V = the maximum velocity of the edge
+* S = the stop factor of the edge
+* DV = the distance between two consecutive vehicles
+
+![Trafsim screenshot](https://www.santfeliu.cat/documents/2958858/screenshot.png "screenshot")
 
 The application can import/export layers in GML format.
-
-
-
 
 
 
