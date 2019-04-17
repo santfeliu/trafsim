@@ -148,6 +148,11 @@ public class RouteMeter
    */
   public static double getCapacity(Edge edge)
   {
-    return 1000 * edge.getLanes() * getAverageSpeed(edge) / vehicleLength;
+    double capacity = 1000 * edge.getSpeed() / vehicleLength;
+    if (edge.getDelay() > 0.0)
+    {
+      capacity = Math.min(capacity, 3600.0 / edge.getDelay());
+    }
+    return edge.getLanes() * capacity;
   }
 }
