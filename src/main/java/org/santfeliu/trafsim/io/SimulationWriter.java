@@ -58,7 +58,7 @@ import org.santfeliu.trafsim.geom.Polygon;
  */
 public class SimulationWriter extends XMLWriter
 {
-  private static final String VERSION = "1.1";
+  private static final String VERSION = "1.2";
 
   public SimulationWriter(OutputStream os) throws IOException
   {
@@ -160,10 +160,10 @@ public class SimulationWriter extends XMLWriter
     writeText(edge.getLanes());
     endTag("lanes");
 
-    startTag("stop");
-    writeText(edge.getStopFactor());
-    endTag("stop");
-
+    startTag("delay");
+    writeText(edge.getDelay());
+    endTag("delay");
+    
     endTag("edge");
   }
 

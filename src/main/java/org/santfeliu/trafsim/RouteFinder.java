@@ -45,17 +45,15 @@ import org.santfeliu.trafsim.RoadGraph.Node;
 public class RouteFinder
 {
   private final RoadGraph roadGraph;
-  private final RouteMeter routeMeter;
   private final HashMap<Node, NodeInfo> infos = new HashMap<Node, NodeInfo>();
   private final PickInfo startPick = new PickInfo();
   private final PickInfo endPick = new PickInfo();
   private Node originNode;
   private Node destinationNode;
 
-  public RouteFinder(RoadGraph roadGraph, RouteMeter routeTimer)
+  public RouteFinder(RoadGraph roadGraph)
   {
     this.roadGraph = roadGraph;
-    this.routeMeter = routeTimer;
   }
 
   public void setOrigin(Point3d origin, double tolerance)
@@ -202,7 +200,7 @@ public class RouteFinder
         Node nextNode = edge.targetNode;
         NodeInfo nextNodeInfo = infos.get(nextNode);
 
-        double time = nodeInfo.minTime + routeMeter.getTime(edge);
+        double time = nodeInfo.minTime + RouteMeter.getTime(edge);
         if (time < nextNodeInfo.minTime)
         {
           nextNodeInfo.minTime = time;

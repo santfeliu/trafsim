@@ -106,8 +106,8 @@ public class SimulationReader
           LineString lineString = getLineString(lineStringElement);
           int speed = getInteger(edgeElement, "speed", 50);
           int lanes = getInteger(edgeElement, "lanes", 1);
-          double stopFactor = getDouble(edgeElement, "stop", 0.0);
-          roadGraph.newEdge(lineString, speed, lanes, stopFactor).add();
+          double delay = getDouble(edgeElement, "delay", 0.0);
+          roadGraph.newEdge(lineString, speed, lanes, delay).add();
         }
       }
 

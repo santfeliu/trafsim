@@ -56,7 +56,6 @@ import org.santfeliu.trafsim.geom.LineString;
  */
 public class FindRouteTool extends Tool implements MouseListener, Painter
 {
-  private final RouteMeter routeMeter = new RouteMeter();
   private RouteFinder routeFinder;
   private Route route;
   private double routeTime;
@@ -76,7 +75,7 @@ public class FindRouteTool extends Tool implements MouseListener, Painter
   @Override
   public void start()
   {
-    routeFinder = new RouteFinder(getSimulation().getRoadGraph(), routeMeter);
+    routeFinder = new RouteFinder(getSimulation().getRoadGraph());
     MapViewer mapViewer = getMapViewer();
     mapViewer.addMouseListener(this);
     mapViewer.setPainter(this);
@@ -116,14 +115,14 @@ public class FindRouteTool extends Tool implements MouseListener, Painter
         {
           routeFinder.setDestination(worldPoint, Double.POSITIVE_INFINITY);
           route = routeFinder.getRoute();
-          routeTime = routeMeter.getTime(route);
+          routeTime = RouteMeter.getTime(route);
         }
       }
       else
       {
         routeFinder.setOrigin(worldPoint, Double.POSITIVE_INFINITY);
         route = routeFinder.getRoute();
-        routeTime = routeMeter.getTime(route);
+        routeTime = RouteMeter.getTime(route);
       }
       mapViewer.repaint();
       info("destination");

@@ -60,7 +60,6 @@ import org.santfeliu.trafsim.Vehicles.VehicleGroup;
 public class RouteVehiclesTool extends Tool implements Painter
 {
   private Router router;
-  private final RouteMeter routeMeter = new RouteMeter();
   private final BasicStroke barStroke = new BasicStroke(7,
     BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
 
@@ -142,7 +141,7 @@ public class RouteVehiclesTool extends Tool implements Painter
       Indicators indicators = simulation.getIndicators();
       indicators.reset();
       RoadGraph roadGraph = simulation.getRoadGraph();
-      routeFinder = new RouteFinder(roadGraph, routeMeter);
+      routeFinder = new RouteFinder(roadGraph);
       for (Edge edge : roadGraph.getEdges())
       {
         edge.getIndicators().reset();
@@ -190,7 +189,7 @@ public class RouteVehiclesTool extends Tool implements Painter
                 // routed journey
                 vehicleInd.routedCount += journeyCount;
                 vehicleInd.distance += route.getLength() * journeyCount;
-                vehicleInd.time += routeMeter.getTime(route) * journeyCount;
+                vehicleInd.time += RouteMeter.getTime(route) * journeyCount;
                 for (Section section : route.getSections())
                 {
                   Edge edge = section.getEdge();

@@ -39,12 +39,25 @@ import org.santfeliu.trafsim.Route.Section;
  */
 public class RouteMeter
 {
+  // distance in meters between 2 consecutive vehicles (front to front)
+  static double vehicleLength = 6.5;
+
+  public static double getVehicleLength()
+  {
+    return vehicleLength;
+  }
+
+  public static void setVehicleLength(double vehicleLength)
+  {
+    RouteMeter.vehicleLength = vehicleLength;
+  }
+
   /**
-   * 
+   *
    * @param route
-   * @return route length in meters 
+   * @return route length in meters
    */
-  public double getLength(Route route)
+  public static double getLength(Route route)
   {
     return route.getLength();
   }
@@ -53,11 +66,12 @@ public class RouteMeter
    *
    * @param distance in meters
    * @param speed in Km/h
+   * @param delay in seconds
    * @return time in hours
    */
-  public double getTime(double distance, double speed)
+  public static double getTime(double distance, double speed, double delay)
   {
-    return distance / (1000 * speed);
+    return (delay / 3600) + distance / (1000 * speed);
   }
 
   /**
@@ -65,9 +79,10 @@ public class RouteMeter
    * @param edge
    * @return time in hours
    */
-  public double getTime(Edge edge)
+  public static double getTime(Edge edge)
   {
-    return getTime(edge.getLineString().getLength(), edge.getActualSpeed());
+    return getTime(edge.getLineString().getLength(),
+      edge.getSpeed(), edge.getDelay());
   }
 
   /**
@@ -75,10 +90,11 @@ public class RouteMeter
    * @param section
    * @return time in hours
    */
-  public double getTime(Section section)
+  public static double getTime(Section section)
   {
-    return getTime(section.getLineString().getLength(),
-      section.getEdge().getActualSpeed());
+    Edge edge = section.getEdge();
+    return getTime(section.getLineString().getLength(), edge.getSpeed(),
+      edge.getDelay());
   }
 
   /**
@@ -86,7 +102,7 @@ public class RouteMeter
    * @param route
    * @return time in hours
    */
-  public double getTime(Route route)
+  public static double getTime(Route route)
   {
     double time;
     if (route.isEmpty())
@@ -102,5 +118,36 @@ public class RouteMeter
       }
     }
     return time;
+  }
+
+  /**
+   *
+   * @param edge
+   * @return average speed in Km/h for one vehicle
+   */
+  public static double getAverageSpeed(Edge edge)
+  {
+    double distance = edge.getLineString().getLength();
+    return distance / (1000 * getTime(edge));
+  }
+
+  /**
+   *
+   * @param edge
+   * @return the number of vehicles that can be on this edge
+   */
+  public static double getOnlineVehicles(Edge edge)
+  {
+    return edge.getLineString().getLength() / vehicleLength;
+  }
+
+  /**
+   *
+   * @param edge
+   * @return edge capacity in vehicles / hour
+   */
+  public static double getCapacity(Edge edge)
+  {
+    return 1000 * edge.getLanes() * getAverageSpeed(edge) / vehicleLength;
   }
 }

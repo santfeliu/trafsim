@@ -125,12 +125,12 @@ public class DrawEdgeTool extends Tool
           EdgeDialog dialog = new EdgeDialog(null, true);
           dialog.setSpeed(50);
           dialog.setLanes(1);
-          dialog.setStopFactor(0);
+          dialog.setDelay(0);
           if (dialog.showDialog())
           {
             RoadGraph roadGraph = mapViewer.getSimulation().getRoadGraph();
             Edge edge = roadGraph.newEdge(new LineString(vertices),
-              dialog.getSpeed(), dialog.getLanes(), dialog.getStopFactor());
+              dialog.getSpeed(), dialog.getLanes(), dialog.getDelay());
             edge.add();
             trafficSimulator.setModified(true);
             getUndoManager().addEdit(new Undo(edge));

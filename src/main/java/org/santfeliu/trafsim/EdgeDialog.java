@@ -90,18 +90,18 @@ public class EdgeDialog extends javax.swing.JDialog
     }
   }
 
-  public void setStopFactor(double stopFactor)
+  public void setDelay(double delay)
   {
-    delayTextField.setText(String.valueOf(stopFactor));
+    delayTextField.setText(String.valueOf(delay));
   }
 
-  public double getStopFactor()
+  public double getDelay()
   {
     try
     {
-      double stopFactor = Double.parseDouble(delayTextField.getText());
-      if (stopFactor > 1.0) stopFactor = 1.0;
-      return stopFactor;
+      double delay = Double.parseDouble(delayTextField.getText());
+      if (delay < 0) delay = 0;
+      return delay;
     }
     catch (NumberFormatException ex)
     {
@@ -136,7 +136,7 @@ public class EdgeDialog extends javax.swing.JDialog
     java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("org/santfeliu/trafsim/resources/TrafficSimulator"); // NOI18N
     setTitle(bundle.getString("dialog.edge.title")); // NOI18N
 
-    centerPanel.setPreferredSize(new java.awt.Dimension(200, 120));
+    centerPanel.setPreferredSize(new java.awt.Dimension(200, 140));
     centerPanel.setLayout(new java.awt.GridBagLayout());
 
     speedLabel.setText(bundle.getString("dialog.edge.speed")); // NOI18N
@@ -164,7 +164,7 @@ public class EdgeDialog extends javax.swing.JDialog
     gridBagConstraints.insets = new java.awt.Insets(4, 4, 4, 4);
     centerPanel.add(lanesTextField, gridBagConstraints);
 
-    delayLabel.setText(bundle.getString("dialog.edge.stopFactor")); // NOI18N
+    delayLabel.setText(bundle.getString("dialog.edge.delay")); // NOI18N
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 0;
     gridBagConstraints.gridy = 2;

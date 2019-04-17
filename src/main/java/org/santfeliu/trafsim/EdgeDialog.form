@@ -29,7 +29,7 @@
     <Container class="javax.swing.JPanel" name="centerPanel">
       <Properties>
         <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-          <Dimension value="[200, 120]"/>
+          <Dimension value="[200, 140]"/>
         </Property>
       </Properties>
       <Constraints>
@@ -81,7 +81,7 @@
         <Component class="javax.swing.JLabel" name="delayLabel">
           <Properties>
             <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-              <ResourceString bundle="org/santfeliu/trafsim/resources/TrafficSimulator.properties" key="dialog.edge.stopFactor" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
+              <ResourceString bundle="org/santfeliu/trafsim/resources/TrafficSimulator.properties" key="dialog.edge.delay" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
             </Property>
           </Properties>
           <Constraints>

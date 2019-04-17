@@ -483,8 +483,8 @@ public class MapViewer extends javax.swing.JPanel
         g.setColor(Color.BLACK);
         g.drawString(trafficSimulator.getMessage("indicator.length") +
           ": " + df2.format(edge.lineString.getLength()) + " m", x2, 190);
-        g.drawString(trafficSimulator.getMessage("indicator.actualSpeed") +
-          ": " + df2.format(edge.getActualSpeed()) + " Km/h", x2, 210);
+        g.drawString(trafficSimulator.getMessage("indicator.averageSpeed") +
+          ": " + df2.format(eInd.getAverageSpeed()) + " Km/h", x2, 210);
         g.drawString(trafficSimulator.getMessage("indicator.travelTime") +
           ": " + df2.format(60 * eInd.getTravelTime()) + " min", x2, 230);
         g.drawString(trafficSimulator.getMessage("indicator.capacity") +
@@ -589,7 +589,7 @@ public class MapViewer extends javax.swing.JPanel
           g.setColor(Color.BLACK);
           g.setStroke(STROKE3);
         }
-        else if (edge.getStopFactor() > 0.0)
+        else if (edge.getDelay() > 0.0)
         {
           g.setColor(Color.ORANGE);
         }
