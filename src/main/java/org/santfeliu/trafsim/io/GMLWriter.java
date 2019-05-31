@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import javax.vecmath.Point3d;
 import org.santfeliu.trafsim.Box;
@@ -154,7 +155,7 @@ public class GMLWriter extends XMLWriter
     startTag("ogr:gml_id");
     writeText(fid);
     endTag("ogr:gml_id");
-    HashMap<String, Object> attributes = new HashMap<String, Object>();
+    HashMap<String, Object> attributes = new LinkedHashMap<String, Object>();
     feature.loadAttributes(attributes);
     for (String name : attributes.keySet())
     {

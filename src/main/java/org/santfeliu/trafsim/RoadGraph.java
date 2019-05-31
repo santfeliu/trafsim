@@ -251,6 +251,24 @@ public class RoadGraph extends Layer<Edge>
       attributes.put("SPEED", speed);
       attributes.put("LANES", lanes);
       attributes.put("DELAY", delay);
+      if (indicators == null)
+      {
+        attributes.put("IND_VEHICLE_COUNT", 0);
+        attributes.put("IND_AVG_SPEED", 0);
+        attributes.put("IND_TRAVEL_TIME", 0);
+        attributes.put("IND_REQUIRED_TIME", 0);      
+        attributes.put("IND_CAPACITY", 0);        
+      }
+      else
+      {
+        attributes.put("IND_VEHICLE_COUNT", indicators.vehicleCount);
+        attributes.put("IND_CAPACITY", indicators.getCapacity());
+        attributes.put("IND_AVG_SPEED", indicators.getAverageSpeed());
+        attributes.put("IND_TRAVEL_TIME", 
+          3600 * indicators.getTravelTime()); // seconds
+        attributes.put("IND_REQUIRED_TIME", 
+          3600 * indicators.getVehiclesRequiredTime()); // seconds
+      }
     }
 
     public Indicators getIndicators()
