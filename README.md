@@ -1,4 +1,6 @@
-# Traffic Simulator
+# Traffic simulator
+
+[![Java CI with Maven](https://github.com/santfeliu/trafsim/actions/workflows/maven.yml/badge.svg?branch=master&event=push)](https://github.com/santfeliu/trafsim/actions/workflows/maven.yml)
 
 Traffic Simulator is an open source Java desktop application to simulate the
 vehicle traffic in a road network.
