@@ -43,7 +43,7 @@ import org.santfeliu.trafsim.geom.Point;
  */
 public class Vehicles extends Layer<VehicleGroup>
 {
-  private final ArrayList<VehicleGroup> features = new ArrayList<VehicleGroup>();
+  private final ArrayList<VehicleGroup> features = new ArrayList<>();
 
   @Override
   public String getName()
